@@ -1,24 +1,20 @@
-//
-//  ContentView.swift
-//  Waffle
-//
-//  Created by Ayaan Grover on 8/3/24.
-//
-
 import SwiftUI
+import FirebaseAuth
 
 struct ContentView: View {
+    @State private var isSignedIn = false
+
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        if isSignedIn {
+            ChatView()
+        } else {
+            LoginView(isSignedIn: $isSignedIn)
         }
-        .padding()
     }
 }
 
-#Preview {
-    ContentView()
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        ContentView()
+    }
 }
