@@ -3,33 +3,32 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 56;
+	objectVersion = 60;
 	objects = {
 
 /* Begin PBXBuildFile section */
-		3A0FE7392C5FDE3900422FF2 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A0FE7382C5FDE3900422FF2 /* LoginView.swift */; };
-		3A0FE73B2C5FDF3100422FF2 /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A0FE73A2C5FDF3100422FF2 /* ChatView.swift */; };
-		3A0FE73D2C5FDF3E00422FF2 /* NetworkManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A0FE73C2C5FDF3E00422FF2 /* NetworkManager.swift */; };
 		3A5EEF2C2C5F187900DD8690 /* WaffleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A5EEF2B2C5F187900DD8690 /* WaffleApp.swift */; };
 		3A5EEF2E2C5F187900DD8690 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A5EEF2D2C5F187900DD8690 /* ContentView.swift */; };
 		3A5EEF302C5F187B00DD8690 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3A5EEF2F2C5F187B00DD8690 /* Assets.xcassets */; };
 		3A5EEF332C5F187B00DD8690 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3A5EEF322C5F187B00DD8690 /* Preview Assets.xcassets */; };
-		993729E110FCD5EFAC4D5DAA /* Pods_Waffle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D2A0767152A296D24FEA9493 /* Pods_Waffle.framework */; };
+		3AD6A5CF2C61A0040037F09F /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 3AD6A5CE2C61A0040037F09F /* FirebaseAuth */; };
+		3AD6A5D12C61A12E0037F09F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AD6A5D02C61A12C0037F09F /* AppDelegate.swift */; };
+		3AD6A5D62C61A1D50037F09F /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 3AD6A5D52C61A1D50037F09F /* GoogleSignIn */; };
+		3AD6A5D82C61A1D50037F09F /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 3AD6A5D72C61A1D50037F09F /* GoogleSignInSwift */; };
+		3AD6A5DA2C61A21A0037F09F /* ChatApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AD6A5D92C61A21A0037F09F /* ChatApp.swift */; };
+		3AD6A5DC2C61A4B10037F09F /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3AD6A5DB2C61A4B10037F09F /* GoogleService-Info.plist */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		1E40AE7D3E790341CC307A7A /* Pods-Waffle.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Waffle.debug.xcconfig"; path = "Target Support Files/Pods-Waffle/Pods-Waffle.debug.xcconfig"; sourceTree = "<group>"; };
-		3A0FE7382C5FDE3900422FF2 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
-		3A0FE73A2C5FDF3100422FF2 /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
-		3A0FE73C2C5FDF3E00422FF2 /* NetworkManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkManager.swift; sourceTree = "<group>"; };
-		3A5EEF282C5F187900DD8690 /* Waffle.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Waffle.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		3A5EEF282C5F187900DD8690 /* Waffle.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = Waffle.app; path = "/Users/ayaangrover/Documents/Github/waffle/Waffle/build/Debug-iphoneos/Waffle.app"; sourceTree = "<absolute>"; };
 		3A5EEF2B2C5F187900DD8690 /* WaffleApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaffleApp.swift; sourceTree = "<group>"; };
 		3A5EEF2D2C5F187900DD8690 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		3A5EEF2F2C5F187B00DD8690 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		3A5EEF322C5F187B00DD8690 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		3A5EEF392C5F22E900DD8690 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
-		61F75880D42858210946B8B9 /* Pods-Waffle.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Waffle.release.xcconfig"; path = "Target Support Files/Pods-Waffle/Pods-Waffle.release.xcconfig"; sourceTree = "<group>"; };
-		D2A0767152A296D24FEA9493 /* Pods_Waffle.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Waffle.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		3AD6A5D02C61A12C0037F09F /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		3AD6A5D92C61A21A0037F09F /* ChatApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatApp.swift; sourceTree = "<group>"; };
+		3AD6A5DB2C61A4B10037F09F /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "../../../../../Desktop/GoogleService-Info.plist"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -37,7 +36,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				993729E110FCD5EFAC4D5DAA /* Pods_Waffle.framework in Frameworks */,
+				3AD6A5D82C61A1D50037F09F /* GoogleSignInSwift in Frameworks */,
+				3AD6A5CF2C61A0040037F09F /* FirebaseAuth in Frameworks */,
+				3AD6A5D62C61A1D50037F09F /* GoogleSignIn in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -48,29 +49,18 @@
 			isa = PBXGroup;
 			children = (
 				3A5EEF2A2C5F187900DD8690 /* Waffle */,
-				3A5EEF292C5F187900DD8690 /* Products */,
-				5A03804DC2912CB3AE1A4631 /* Pods */,
-				88EBC542B56F883A0C28C596 /* Frameworks */,
 			);
-			sourceTree = "<group>";
-		};
-		3A5EEF292C5F187900DD8690 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				3A5EEF282C5F187900DD8690 /* Waffle.app */,
-			);
-			name = Products;
 			sourceTree = "<group>";
 		};
 		3A5EEF2A2C5F187900DD8690 /* Waffle */ = {
 			isa = PBXGroup;
 			children = (
 				3A5EEF392C5F22E900DD8690 /* Info.plist */,
+				3AD6A5DB2C61A4B10037F09F /* GoogleService-Info.plist */,
 				3A5EEF2B2C5F187900DD8690 /* WaffleApp.swift */,
+				3AD6A5D02C61A12C0037F09F /* AppDelegate.swift */,
+				3AD6A5D92C61A21A0037F09F /* ChatApp.swift */,
 				3A5EEF2D2C5F187900DD8690 /* ContentView.swift */,
-				3A0FE7382C5FDE3900422FF2 /* LoginView.swift */,
-				3A0FE73A2C5FDF3100422FF2 /* ChatView.swift */,
-				3A0FE73C2C5FDF3E00422FF2 /* NetworkManager.swift */,
 				3A5EEF2F2C5F187B00DD8690 /* Assets.xcassets */,
 				3A5EEF312C5F187B00DD8690 /* Preview Content */,
 			);
@@ -85,23 +75,6 @@
 			path = "Preview Content";
 			sourceTree = "<group>";
 		};
-		5A03804DC2912CB3AE1A4631 /* Pods */ = {
-			isa = PBXGroup;
-			children = (
-				1E40AE7D3E790341CC307A7A /* Pods-Waffle.debug.xcconfig */,
-				61F75880D42858210946B8B9 /* Pods-Waffle.release.xcconfig */,
-			);
-			path = Pods;
-			sourceTree = "<group>";
-		};
-		88EBC542B56F883A0C28C596 /* Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-				D2A0767152A296D24FEA9493 /* Pods_Waffle.framework */,
-			);
-			name = Frameworks;
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -109,17 +82,20 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 3A5EEF362C5F187B00DD8690 /* Build configuration list for PBXNativeTarget "Waffle" */;
 			buildPhases = (
-				366CEACDB532CD294A59423F /* [CP] Check Pods Manifest.lock */,
 				3A5EEF242C5F187900DD8690 /* Sources */,
 				3A5EEF252C5F187900DD8690 /* Frameworks */,
 				3A5EEF262C5F187900DD8690 /* Resources */,
-				E0BDF24A006F3592EC8BBA9E /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
 			name = Waffle;
+			packageProductDependencies = (
+				3AD6A5CE2C61A0040037F09F /* FirebaseAuth */,
+				3AD6A5D52C61A1D50037F09F /* GoogleSignIn */,
+				3AD6A5D72C61A1D50037F09F /* GoogleSignInSwift */,
+			);
 			productName = Waffle;
 			productReference = 3A5EEF282C5F187900DD8690 /* Waffle.app */;
 			productType = "com.apple.product-type.application";
@@ -140,7 +116,7 @@
 				};
 			};
 			buildConfigurationList = 3A5EEF232C5F187900DD8690 /* Build configuration list for PBXProject "Waffle" */;
-			compatibilityVersion = "Xcode 14.0";
+			compatibilityVersion = "Xcode 15.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -148,7 +124,11 @@
 				Base,
 			);
 			mainGroup = 3A5EEF1F2C5F187900DD8690;
-			productRefGroup = 3A5EEF292C5F187900DD8690 /* Products */;
+			packageReferences = (
+				3AD6A5CD2C61A0030037F09F /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				3AD6A5D42C61A1D50037F09F /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
+			);
+			productRefGroup = 3A5EEF1F2C5F187900DD8690;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -164,61 +144,19 @@
 			files = (
 				3A5EEF332C5F187B00DD8690 /* Preview Assets.xcassets in Resources */,
 				3A5EEF302C5F187B00DD8690 /* Assets.xcassets in Resources */,
+				3AD6A5DC2C61A4B10037F09F /* GoogleService-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
-
-/* Begin PBXShellScriptBuildPhase section */
-		366CEACDB532CD294A59423F /* [CP] Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
-				"${PODS_ROOT}/Manifest.lock",
-			);
-			name = "[CP] Check Pods Manifest.lock";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-Waffle-checkManifestLockResult.txt",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
-		};
-		E0BDF24A006F3592EC8BBA9E /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-Waffle/Pods-Waffle-frameworks-${CONFIGURATION}-input-files.xcfilelist",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-Waffle/Pods-Waffle-frameworks-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Waffle/Pods-Waffle-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		3A5EEF242C5F187900DD8690 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				3A0FE73B2C5FDF3100422FF2 /* ChatView.swift in Sources */,
-				3A0FE7392C5FDE3900422FF2 /* LoginView.swift in Sources */,
-				3A0FE73D2C5FDF3E00422FF2 /* NetworkManager.swift in Sources */,
+				3AD6A5D12C61A12E0037F09F /* AppDelegate.swift in Sources */,
+				3AD6A5DA2C61A21A0037F09F /* ChatApp.swift in Sources */,
 				3A5EEF2E2C5F187900DD8690 /* ContentView.swift in Sources */,
 				3A5EEF2C2C5F187900DD8690 /* WaffleApp.swift in Sources */,
 			);
@@ -348,7 +286,6 @@
 		};
 		3A5EEF372C5F187B00DD8690 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 1E40AE7D3E790341CC307A7A /* Pods-Waffle.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -379,7 +316,6 @@
 		};
 		3A5EEF382C5F187B00DD8690 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 61F75880D42858210946B8B9 /* Pods-Waffle.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -430,6 +366,43 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		3AD6A5CD2C61A0030037F09F /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 11.0.0;
+			};
+		};
+		3AD6A5D42C61A1D50037F09F /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 7.1.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		3AD6A5CE2C61A0040037F09F /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3AD6A5CD2C61A0030037F09F /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+		3AD6A5D52C61A1D50037F09F /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3AD6A5D42C61A1D50037F09F /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
+		};
+		3AD6A5D72C61A1D50037F09F /* GoogleSignInSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3AD6A5D42C61A1D50037F09F /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignInSwift;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 3A5EEF202C5F187900DD8690 /* Project object */;
 }
