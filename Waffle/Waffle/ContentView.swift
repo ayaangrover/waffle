@@ -4,7 +4,6 @@ import GoogleSignIn
 import FirebaseAuth
 import FirebaseCore
 
-
 struct ContentView: View {
     
     @State private var user: User?
@@ -36,15 +35,15 @@ struct ContentView: View {
         
         let config = GIDConfiguration(clientID: clientID)
         
-        GIDSignIn.sharedInstance.signIn(withPresenting: getRootViewController()) { user, error in
+        GIDSignIn.sharedInstance.signIn(withPresenting: getRootViewController()) { result, error in
             if let error = error {
                 print("Error during sign-in: \(error.localizedDescription)")
                 return
             }
             
-            guard let authentication = user?.authentication,
-                  let idToken = authentication.idToken,
-                  let accessToken = authentication.accessToken else {
+            guard let user = result?.user,
+                  let idToken = user.idToken?.tokenString,
+                  let accessToken = user.accessToken.tokenString else {
                 print("Error retrieving tokens")
                 return
             }
