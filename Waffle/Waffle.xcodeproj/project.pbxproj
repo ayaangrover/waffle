@@ -11,24 +11,26 @@
 		3A5EEF2E2C5F187900DD8690 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A5EEF2D2C5F187900DD8690 /* ContentView.swift */; };
 		3A5EEF302C5F187B00DD8690 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3A5EEF2F2C5F187B00DD8690 /* Assets.xcassets */; };
 		3A5EEF332C5F187B00DD8690 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3A5EEF322C5F187B00DD8690 /* Preview Assets.xcassets */; };
+		3AA96B222C654B7000204823 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3AA96B212C654B7000204823 /* GoogleService-Info.plist */; };
+		3AA96B242C654DE400204823 /* NetworkManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AA96B232C654DE400204823 /* NetworkManager.swift */; };
 		3AD6A5CF2C61A0040037F09F /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 3AD6A5CE2C61A0040037F09F /* FirebaseAuth */; };
 		3AD6A5D12C61A12E0037F09F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AD6A5D02C61A12C0037F09F /* AppDelegate.swift */; };
 		3AD6A5D62C61A1D50037F09F /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 3AD6A5D52C61A1D50037F09F /* GoogleSignIn */; };
 		3AD6A5D82C61A1D50037F09F /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 3AD6A5D72C61A1D50037F09F /* GoogleSignInSwift */; };
 		3AD6A5DA2C61A21A0037F09F /* ChatApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AD6A5D92C61A21A0037F09F /* ChatApp.swift */; };
-		3AD6A5DC2C61A4B10037F09F /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3AD6A5DB2C61A4B10037F09F /* GoogleService-Info.plist */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		3A5EEF282C5F187900DD8690 /* Waffle.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = Waffle.app; path = "/Users/ayaangrover/Documents/Github/waffle/Waffle/build/Debug-iphoneos/Waffle.app"; sourceTree = "<absolute>"; };
 		3A5EEF2B2C5F187900DD8690 /* WaffleApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaffleApp.swift; sourceTree = "<group>"; };
 		3A5EEF2D2C5F187900DD8690 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		3A5EEF2F2C5F187B00DD8690 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		3A5EEF322C5F187B00DD8690 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		3A5EEF392C5F22E900DD8690 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		3AA96B1C2C640F7500204823 /* Waffle.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Waffle.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		3AA96B212C654B7000204823 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		3AA96B232C654DE400204823 /* NetworkManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkManager.swift; sourceTree = "<group>"; };
 		3AD6A5D02C61A12C0037F09F /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		3AD6A5D92C61A21A0037F09F /* ChatApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatApp.swift; sourceTree = "<group>"; };
-		3AD6A5DB2C61A4B10037F09F /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "../../../../../Desktop/GoogleService-Info.plist"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -49,6 +51,7 @@
 			isa = PBXGroup;
 			children = (
 				3A5EEF2A2C5F187900DD8690 /* Waffle */,
+				3AA96B1C2C640F7500204823 /* Waffle.app */,
 			);
 			sourceTree = "<group>";
 		};
@@ -56,11 +59,12 @@
 			isa = PBXGroup;
 			children = (
 				3A5EEF392C5F22E900DD8690 /* Info.plist */,
-				3AD6A5DB2C61A4B10037F09F /* GoogleService-Info.plist */,
+				3AA96B212C654B7000204823 /* GoogleService-Info.plist */,
 				3A5EEF2B2C5F187900DD8690 /* WaffleApp.swift */,
 				3AD6A5D02C61A12C0037F09F /* AppDelegate.swift */,
 				3AD6A5D92C61A21A0037F09F /* ChatApp.swift */,
 				3A5EEF2D2C5F187900DD8690 /* ContentView.swift */,
+				3AA96B232C654DE400204823 /* NetworkManager.swift */,
 				3A5EEF2F2C5F187B00DD8690 /* Assets.xcassets */,
 				3A5EEF312C5F187B00DD8690 /* Preview Content */,
 			);
@@ -97,7 +101,7 @@
 				3AD6A5D72C61A1D50037F09F /* GoogleSignInSwift */,
 			);
 			productName = Waffle;
-			productReference = 3A5EEF282C5F187900DD8690 /* Waffle.app */;
+			productReference = 3AA96B1C2C640F7500204823 /* Waffle.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -144,7 +148,7 @@
 			files = (
 				3A5EEF332C5F187B00DD8690 /* Preview Assets.xcassets in Resources */,
 				3A5EEF302C5F187B00DD8690 /* Assets.xcassets in Resources */,
-				3AD6A5DC2C61A4B10037F09F /* GoogleService-Info.plist in Resources */,
+				3AA96B222C654B7000204823 /* GoogleService-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -157,6 +161,7 @@
 			files = (
 				3AD6A5D12C61A12E0037F09F /* AppDelegate.swift in Sources */,
 				3AD6A5DA2C61A21A0037F09F /* ChatApp.swift in Sources */,
+				3AA96B242C654DE400204823 /* NetworkManager.swift in Sources */,
 				3A5EEF2E2C5F187900DD8690 /* ContentView.swift in Sources */,
 				3A5EEF2C2C5F187900DD8690 /* WaffleApp.swift in Sources */,
 			);
@@ -289,6 +294,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Waffle/Preview Content\"";
@@ -299,8 +305,8 @@
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -319,6 +325,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Waffle/Preview Content\"";
@@ -329,8 +336,8 @@
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
