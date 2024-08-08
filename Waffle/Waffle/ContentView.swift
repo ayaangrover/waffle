@@ -42,11 +42,11 @@ struct ContentView: View {
             }
             
             guard let user = result?.user,
-                  let idToken = user.idToken?.tokenString,
-                  let accessToken = user.accessToken.tokenString else {
+                  let idToken = user.idToken?.tokenString else {
                 print("Error retrieving tokens")
                 return
             }
+            let accessToken = user.accessToken.tokenString
             
             let credential = GoogleAuthProvider.credential(withIDToken: idToken, accessToken: accessToken)
             
@@ -54,7 +54,6 @@ struct ContentView: View {
                 if let error = error {
                     print("Error signing in with Google: \(error.localizedDescription)")
                 } else {
-                    // Successfully signed in
                     self.user = authResult?.user
                     self.isSignedIn = true
                 }
@@ -63,10 +62,9 @@ struct ContentView: View {
     }
     
     private func getRootViewController() -> UIViewController {
-        if let rootVC = UIApplication.shared.windows.first?.rootViewController {
-            return rootVC
-        } else {
-            return UIViewController()
+        guard let rootVC = UIApplication.shared.windows.first?.rootViewController else {
+            fatalError("Unable to get root view controller")
         }
+        return rootVC
     }
 }
