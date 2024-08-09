@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		3A266BA52C66D644006617F0 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A266BA42C66D644006617F0 /* SettingsView.swift */; };
 		3A5EEF2C2C5F187900DD8690 /* WaffleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A5EEF2B2C5F187900DD8690 /* WaffleApp.swift */; };
 		3A5EEF2E2C5F187900DD8690 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A5EEF2D2C5F187900DD8690 /* ContentView.swift */; };
 		3A5EEF302C5F187B00DD8690 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3A5EEF2F2C5F187B00DD8690 /* Assets.xcassets */; };
@@ -21,6 +22,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		3A266BA42C66D644006617F0 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		3A5EEF2B2C5F187900DD8690 /* WaffleApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaffleApp.swift; sourceTree = "<group>"; };
 		3A5EEF2D2C5F187900DD8690 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		3A5EEF2F2C5F187B00DD8690 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -65,6 +67,7 @@
 				3AD6A5D92C61A21A0037F09F /* ChatApp.swift */,
 				3A5EEF2D2C5F187900DD8690 /* ContentView.swift */,
 				3AA96B232C654DE400204823 /* NetworkManager.swift */,
+				3A266BA42C66D644006617F0 /* SettingsView.swift */,
 				3A5EEF2F2C5F187B00DD8690 /* Assets.xcassets */,
 				3A5EEF312C5F187B00DD8690 /* Preview Content */,
 			);
@@ -162,6 +165,7 @@
 				3AD6A5D12C61A12E0037F09F /* AppDelegate.swift in Sources */,
 				3AD6A5DA2C61A21A0037F09F /* ChatApp.swift in Sources */,
 				3AA96B242C654DE400204823 /* NetworkManager.swift in Sources */,
+				3A266BA52C66D644006617F0 /* SettingsView.swift in Sources */,
 				3A5EEF2E2C5F187900DD8690 /* ContentView.swift in Sources */,
 				3A5EEF2C2C5F187900DD8690 /* WaffleApp.swift in Sources */,
 			);
@@ -307,6 +311,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -338,6 +343,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

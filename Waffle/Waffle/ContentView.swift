@@ -24,7 +24,7 @@ struct ContentView: View {
                                 Image(systemName: "gearshape")
                                     .resizable()
                                     .frame(width: 24, height: 24)
-                                    .foregroundColor(.blue)
+                                    .foregroundColor(Color("Icons"))
                             }
                             .padding(.leading)
                             
@@ -41,7 +41,7 @@ struct ContentView: View {
                                 Image(systemName: "rectangle.portrait.and.arrow.right")
                                     .resizable()
                                     .frame(width: 24, height: 24)
-                                    .foregroundColor(.blue)
+                                    .foregroundColor(Color("Icons"))
                             }
                             .padding(.trailing)
                         }
@@ -50,7 +50,7 @@ struct ContentView: View {
                         
                         Spacer()
                     }
-                    .background(Color(UIColor.systemGray6))
+                    .background(Color("Background"))
                     .frame(width: geometry.size.width, height: 70) // Adjusted height of the grey bar
                     .edgesIgnoringSafeArea(.top)
                 }
@@ -75,7 +75,7 @@ struct ContentView: View {
                                                     VStack(alignment: .trailing) {
                                                         Text(messageWithoutLastParentheses(message))
                                                             .padding(10)
-                                                            .background(Color.blue)
+                                                            .background(Color("Accent"))
                                                             .foregroundColor(.white)
                                                             .cornerRadius(20)
                                                             .frame(maxWidth: 300, alignment: .trailing)
@@ -149,6 +149,8 @@ struct ContentView: View {
                             .textFieldStyle(RoundedBorderTextFieldStyle())
                             .padding()
                             .background(Color(UIColor.systemBackground))
+                            .frame(height:24)
+                            .cornerRadius(15)
                         
                         Button(action: sendMessage) {
                             Image(systemName: "paperplane.fill")
@@ -156,7 +158,7 @@ struct ContentView: View {
                                 .frame(width: 24, height: 24)
                                 .foregroundColor(.white)
                                 .padding()
-                                .background(Color.blue)
+                                .background(Color("Accent"))
                                 .clipShape(Circle())
                         }
                         .padding()
@@ -303,10 +305,27 @@ struct ContentView: View {
     }
 }
 
-struct SettingsView: View {
-    var body: some View {
-        Text("Settings")
-            .font(.largeTitle)
-            .padding()
+extension Color {
+    init(hex: String) {
+        let hex = hex.trimmingCharacters(in: .whitespacesAndNewlines)
+        let scanner = Scanner(string: hex)
+        if hex.hasPrefix("#") {
+            scanner.scanLocation = 1
+        }
+        var rgb: UInt64 = 0
+        scanner.scanHexInt64(&rgb)
+        self.init(
+            .sRGB,
+            red: Double((rgb >> 16) & 0xFF) / 255.0,
+            green: Double((rgb >> 8) & 0xFF) / 255.0,
+            blue: Double(rgb & 0xFF) / 255.0,
+            opacity: 1.0
+        )
+    }
+}
+
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        ContentView()
     }
 }

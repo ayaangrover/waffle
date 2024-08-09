@@ -3,7 +3,7 @@ import Combine
 
 class NetworkManager: ObservableObject {
     @Published var messages: [String] = []
-    private let baseURL = "https://bec6d0a6-c784-416f-9c13-36065e848a92-00-j08wl6y0j2ej.kirk.replit.dev/"
+    private let baseURL = "https://waffle.ayaangrover.hackclub.app/"
 
     func fetchMessages() {
         guard let url = URL(string: baseURL) else { return }
