@@ -189,7 +189,9 @@ struct ContentView: View {
         let trimmedMessage = newMessage.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedMessage.isEmpty else { return }
         
-        let formattedMessage = "\(trimmedMessage) \n(Sent by \(user.displayName?.components(separatedBy: " ").first ?? "User") at \(formattedCurrentDateTime()) \(user.photoURL?.absoluteString ?? ""))"
+        // Create a message string without the URL
+//        let formattedMessage = "\(trimmedMessage) \n(Sent by \(user.displayName?.components(separatedBy: " ").first ?? "User") at \(formattedCurrentDateTime()))"
+        let formattedMessage = "\(trimmedMessage) \n(Sent by \(user.displayName?.components(separatedBy: " ").first ?? "User") at \(formattedCurrentDateTime()))"
         networkManager.sendMessage(formattedMessage)
         newMessage = ""
     }
@@ -303,6 +305,7 @@ struct ContentView: View {
         }
         return url
     }
+
 }
 
 extension Color {
