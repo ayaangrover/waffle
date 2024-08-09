@@ -13,57 +13,126 @@ struct ContentView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // Top Bar
-            GeometryReader { geometry in
-                VStack {
-                    HStack {
-                        Button(action: signOut) {
-                            Image(systemName: "rectangle.portrait.and.arrow.right")
-                                .resizable()
-                                .frame(width: 24, height: 24)
-                                .foregroundColor(.blue)
+            // Top Bar (only show when signed in)
+            if isSignedIn {
+                GeometryReader { geometry in
+                    VStack(spacing: 0) {
+                        Spacer().frame(height: 90) // Spacing above the bar
+                        
+                        HStack {
+                            NavigationLink(destination: SettingsView()) {
+                                Image(systemName: "gearshape")
+                                    .resizable()
+                                    .frame(width: 24, height: 24)
+                                    .foregroundColor(.blue)
+                            }
+                            .padding(.leading)
+                            
+                            Spacer()
+                            
+                            Text("Messages")
+                                .font(.headline)
+                                .frame(maxWidth: .infinity)
+                                .padding(.bottom, 5) // Center text vertically
+                            
+                            Spacer()
+                            
+                            Button(action: signOut) {
+                                Image(systemName: "rectangle.portrait.and.arrow.right")
+                                    .resizable()
+                                    .frame(width: 24, height: 24)
+                                    .foregroundColor(.blue)
+                            }
+                            .padding(.trailing)
                         }
-                        .padding(.leading)
+                        .padding(.horizontal)
+                        .frame(height: 50) // Height of the bar
                         
                         Spacer()
-                        
-                        Text("Messages")
-                            .font(.headline)
-                            .frame(maxWidth: .infinity)
-                        
-                        Spacer()
-                        
-                        NavigationLink(destination: SettingsView()) {
-                            Image(systemName: "gearshape.fill")
-                                .resizable()
-                                .frame(width: 24, height: 24)
-                                .foregroundColor(.blue)
-                        }
-                        .padding(.trailing)
                     }
-                    .padding(.horizontal)
-                    .padding(.bottom, 5)
-                    .frame(height: 60) // Adjust the height of the bar
-                    
-                    Spacer()
+                    .background(Color(UIColor.systemGray6))
+                    .frame(width: geometry.size.width, height: 70) // Adjusted height of the grey bar
+                    .edgesIgnoringSafeArea(.top)
                 }
-                .background(Color(UIColor.systemGray6))
-                .frame(width: geometry.size.width, height: 120) // Extend the bar lower
-                .edgesIgnoringSafeArea(.top)
+                .frame(height: 70) // Ensure the bar's height matches
             }
-            .frame(height: 120) // Ensure the bar's height
-
+            
             if isSignedIn {
                 VStack {
                     ScrollViewReader { proxy in
                         ScrollView(.vertical, showsIndicators: false) {
                             VStack(spacing: 10) {
-                                ForEach(networkManager.messages, id: \.self) { message in
-                                    MessageView(message: message, isCurrentUser: isMessageFromCurrentUser(message))
-                                        .id(message) // Assign unique ID for scroll position
+                                ForEach(0..<networkManager.messages.count, id: \.self) { index in
+                                    let message = networkManager.messages[index]
+                                    let isCurrentUserMessage = isMessageFromCurrentUser(message)
+                                    let shouldShowTimestamp = shouldShowTimestamp(for: index)
+                                    
+                                    HStack {
+                                        if isCurrentUserMessage {
+                                            Spacer()
+                                            VStack(alignment: .trailing) {
+                                                HStack {
+                                                    VStack(alignment: .trailing) {
+                                                        Text(messageWithoutLastParentheses(message))
+                                                            .padding(10)
+                                                            .background(Color.blue)
+                                                            .foregroundColor(.white)
+                                                            .cornerRadius(20)
+                                                            .frame(maxWidth: 300, alignment: .trailing)
+                                                        if shouldShowTimestamp, let timestamp = extractLastParenthesesContent(from: message) {
+                                                            Text(timestamp)
+                                                                .font(.caption)
+                                                                .foregroundColor(.gray)
+                                                                .padding(.trailing, 5)
+                                                        }
+                                                    }
+                                                    if let profileImageURL = user?.photoURL {
+                                                        AsyncImage(url: profileImageURL) { image in
+                                                            image.resizable()
+                                                                 .aspectRatio(contentMode: .fill)
+                                                                 .clipShape(Circle())
+                                                        } placeholder: {
+                                                            Circle().fill(Color.gray)
+                                                        }
+                                                        .frame(width: 40, height: 40)
+                                                    }
+                                                }
+                                            }
+                                        } else {
+                                            HStack {
+                                                if let profileImageURL = extractProfileImageURL(from: message) {
+                                                    AsyncImage(url: profileImageURL) { image in
+                                                        image.resizable()
+                                                             .aspectRatio(contentMode: .fill)
+                                                             .clipShape(Circle())
+                                                    } placeholder: {
+                                                        Circle().fill(Color.gray)
+                                                    }
+                                                    .frame(width: 40, height: 40)
+                                                }
+                                                VStack(alignment: .leading) {
+                                                    Text(messageWithoutLastParentheses(message))
+                                                        .padding(10)
+                                                        .background(Color.gray.opacity(0.2))
+                                                        .cornerRadius(20)
+                                                        .frame(maxWidth: 300, alignment: .leading)
+                                                    if shouldShowTimestamp, let timestamp = extractLastParenthesesContent(from: message) {
+                                                        Text(timestamp)
+                                                            .font(.caption)
+                                                            .foregroundColor(.gray)
+                                                            .padding(.leading, 5)
+                                                    }
+                                                }
+                                                Spacer()
+                                            }
+                                        }
+                                    }
+                                    .padding(.horizontal)
+                                    .padding(.bottom, 2) // Adjust bottom padding
+                                    .id(message) // Assign unique ID for scroll position
                                 }
                             }
-                            .padding(.bottom, 80) // Ensure there's space above the input bar
+                            .padding(.bottom, 10) // Ensure space above input bar
                             .onChange(of: networkManager.messages) { _ in
                                 // Scroll to the latest message
                                 if let lastMessage = networkManager.messages.last {
@@ -94,7 +163,7 @@ struct ContentView: View {
                     }
                     .background(Color(UIColor.systemBackground))
                 }
-                .padding(.bottom, 10) // Adjust padding if needed
+                .padding(.bottom, 5) // Adjust padding if needed
             } else {
                 Button("Sign In with Google") {
                     signInWithGoogle()
@@ -106,7 +175,7 @@ struct ContentView: View {
                 self.user = currentUser
                 self.isSignedIn = true
                 networkManager.fetchMessages()
-                Timer.scheduledTimer(withTimeInterval: 20, repeats: true) { _ in
+                Timer.scheduledTimer(withTimeInterval: 0.2, repeats: true) { _ in
                     networkManager.fetchMessages()
                 }
             }
@@ -118,7 +187,7 @@ struct ContentView: View {
         let trimmedMessage = newMessage.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedMessage.isEmpty else { return }
         
-        let formattedMessage = "\(trimmedMessage) \n(Sent by \(user.displayName?.components(separatedBy: " ").first ?? "User") at \(formattedCurrentDateTime()))"
+        let formattedMessage = "\(trimmedMessage) \n(Sent by \(user.displayName?.components(separatedBy: " ").first ?? "User") at \(formattedCurrentDateTime()) \(user.photoURL?.absoluteString ?? ""))"
         networkManager.sendMessage(formattedMessage)
         newMessage = ""
     }
@@ -188,45 +257,49 @@ struct ContentView: View {
         let firstName = user.displayName?.components(separatedBy: " ").first ?? ""
         return message.contains("Sent by \(firstName) at")
     }
-}
-
-struct MessageView: View {
-    let message: String
-    let isCurrentUser: Bool
     
-    var body: some View {
-        HStack {
-            if isCurrentUser {
-                Spacer()
-                VStack(alignment: .trailing) {
-                    Text(message)
-                        .padding(10)
-                        .background(Color.blue)
-                        .foregroundColor(.white)
-                        .cornerRadius(20)
-                        .frame(maxWidth: 300, alignment: .trailing)
-                    Text("Just now") // Placeholder for timestamp, adjust as needed
-                        .font(.caption)
-                        .foregroundColor(.gray)
-                        .padding(.trailing, 5)
-                }
-            } else {
-                VStack(alignment: .leading) {
-                    Text(message)
-                        .padding(10)
-                        .background(Color.gray.opacity(0.2))
-                        .cornerRadius(20)
-                        .frame(maxWidth: 300, alignment: .leading)
-                    Text("Just now") // Placeholder for timestamp, adjust as needed
-                        .font(.caption)
-                        .foregroundColor(.gray)
-                        .padding(.leading, 5)
-                }
-                Spacer()
-            }
+    private func extractLastParenthesesContent(from message: String) -> String? {
+        guard let lastOpenParenIndex = message.lastIndex(of: "("),
+              let lastCloseParenIndex = message.lastIndex(of: ")"),
+              lastOpenParenIndex < lastCloseParenIndex else {
+            return nil
         }
-        .padding(.horizontal)
-        .padding(.bottom, 5) // Adjust bottom padding to ensure messages aren't cut off
+        let startIndex = message.index(after: lastOpenParenIndex)
+        let endIndex = lastCloseParenIndex
+        return String(message[startIndex..<endIndex])
+    }
+    
+    private func messageWithoutLastParentheses(_ message: String) -> String {
+        guard let lastOpenParenIndex = message.lastIndex(of: "("),
+              let lastCloseParenIndex = message.lastIndex(of: ")"),
+              lastOpenParenIndex < lastCloseParenIndex else {
+            return message
+        }
+        return String(message[..<lastOpenParenIndex]).trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+    
+    private func shouldShowTimestamp(for index: Int) -> Bool {
+        guard index < networkManager.messages.count else { return false }
+        
+        let message = networkManager.messages[index]
+        let isCurrentUserMessage = isMessageFromCurrentUser(message)
+        
+        // Check if the next message is from a different user
+        if index < networkManager.messages.count - 1 {
+            let nextMessage = networkManager.messages[index + 1]
+            let isNextMessageFromSameUser = isMessageFromCurrentUser(nextMessage) == isCurrentUserMessage
+            return !isNextMessageFromSameUser
+        }
+        
+        // Always show timestamp for the last message
+        return true
+    }
+    
+    private func extractProfileImageURL(from message: String) -> URL? {
+        guard let urlString = extractLastParenthesesContent(from: message), let url = URL(string: urlString) else {
+            return nil
+        }
+        return url
     }
 }
 
