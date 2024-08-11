@@ -4,206 +4,178 @@ import GoogleSignIn
 import FirebaseAuth
 import FirebaseCore
 import Foundation
+import FirebaseFirestore
+import FirebaseStorage
 
 struct ContentView: View {
     
-    @State private var profileImageURLs: [String: URL] = [:] // Maps emails to URLs
+    @State private var profileImageURLs: [String: URL] = [:]
     @State private var user: User?
     @State private var isSignedIn = false
     @StateObject private var networkManager = NetworkManager()
     @State private var newMessage = ""
     
     var body: some View {
-            VStack(spacing: 0) {
-                if isSignedIn {
-                    GeometryReader { geometry in
-                        VStack(spacing: 0) {
-                            Spacer().frame(height: 90) // Spacing above the bar
-                            
-                            HStack {
-                                NavigationLink(destination: SettingsView()) {
-                                    Image(systemName: "gearshape")
-                                        .resizable()
-                                        .frame(width: 24, height: 24)
-                                        .foregroundColor(Color("Icons"))
-                                }
-                                .padding(.leading)
-                                
-                                Spacer()
-                                
-                                Text("Messages")
-                                    .font(.headline)
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.bottom, 5) // Center text vertically
-                                
-                                Spacer()
-                                
-                                Button(action: signOut) {
-                                    Image(systemName: "rectangle.portrait.and.arrow.right")
-                                        .resizable()
-                                        .frame(width: 24, height: 24)
-                                        .foregroundColor(Color("Icons"))
-                                }
-                                .padding(.trailing)
+        VStack(spacing: 0) {
+            if isSignedIn {
+                GeometryReader { geometry in
+                    VStack(spacing: 0) {
+                        Spacer().frame(height: 90) // Spacing above the bar
+                        
+                        HStack {
+                            NavigationLink(destination: SettingsView()) {
+                                Image(systemName: "gearshape")
+                                    .resizable()
+                                    .frame(width: 24, height: 24)
+                                    .foregroundColor(Color("Icons"))
                             }
-                            .padding(.horizontal)
-                            .frame(height: 50) // Height of the bar
+                            .padding(.leading)
                             
                             Spacer()
+                            
+                            Text("Messages")
+                                .font(.headline)
+                                .frame(maxWidth: .infinity)
+                                .padding(.bottom, 5) // Center text vertically
+                            
+                            Spacer()
+                            
+                            Button(action: signOut) {
+                                Image(systemName: "rectangle.portrait.and.arrow.right")
+                                    .resizable()
+                                    .frame(width: 24, height: 24)
+                                    .foregroundColor(Color("Icons"))
+                            }
+                            .padding(.trailing)
                         }
-                        .background(Color("Background"))
-                        .frame(width: geometry.size.width, height: 70) // Adjusted height of the grey bar
-                        .edgesIgnoringSafeArea(.top)
+                        .padding(.horizontal)
+                        .frame(height: 50) // Height of the bar
+                        
+                        Spacer()
                     }
-                    .frame(height: 70) // Ensure the bar's height matches
-                    
-                    VStack {
-                        ScrollViewReader { proxy in
-                            ScrollView(.vertical, showsIndicators: false) {
-                                VStack(spacing: 10) {
-                                    ForEach(networkManager.messages.indices, id: \.self) { index in
-                                        let message = networkManager.messages[index]
-                                        let isCurrentUserMessage = isMessageFromCurrentUser(message)
-                                        let shouldShowTimestamp = shouldShowTimestamp(for: index)
-                                        
-                                        let isFirstInGroup: Bool = {
-                                            if index == 0 {
-                                                return true
-                                            }
-                                            let previousMessage = networkManager.messages[index - 1]
-                                            return isMessageFromCurrentUser(previousMessage) != isCurrentUserMessage
-                                        }()
-                                        
-                                        HStack {
-                                            if isCurrentUserMessage {
-                                                Spacer()
-                                                VStack(alignment: .trailing) {
-                                                    HStack {
-                                                        VStack(alignment: .trailing) {
-                                                            Text(messageWithoutLastParentheses(message))
-                                                                .padding(10)
-                                                                .background(Color("Accent"))
-                                                                .foregroundColor(.white)
-                                                                .cornerRadius(20)
-                                                                .frame(maxWidth: 300, alignment: .trailing)
-                                                            if shouldShowTimestamp, let timestamp = extractLastParenthesesContent(from: message) {
-                                                                Text(timestamp)
-                                                                    .font(.caption)
-                                                                    .foregroundColor(.gray)
-                                                                    .padding(.trailing, 5)
-                                                            }
-                                                        }
-                                                        if isFirstInGroup, let email = extractEmailFromMessage(message) {
-                                                            if profileImageURLs[email] == nil {
-                                                                extractProfileImageURL(for: email) { url in
-                                                                    profileImageURLs[email] = url
-                                                                }
-                                                            }
-                                                            if let profileImageURL = profileImageURLs[email] {
-                                                                AsyncImage(url: profileImageURL) { image in
-                                                                    image.resizable()
-                                                                        .aspectRatio(contentMode: .fill)
-                                                                        .clipShape(Circle())
-                                                                } placeholder: {
-                                                                    Circle().fill(Color.gray)
-                                                                }
-                                                                .frame(width: 40, height: 40)
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            } else {
+                    .background(Color("Background"))
+                    .frame(width: geometry.size.width, height: 70) // Adjusted height of the grey bar
+                    .edgesIgnoringSafeArea(.top)
+                }
+                .frame(height: 70) // Ensure the bar's height matches
+                
+                VStack {
+                    ScrollViewReader { proxy in
+                        ScrollView(.vertical, showsIndicators: false) {
+                            VStack(spacing: 10) {
+                                ForEach(0..<networkManager.messages.count, id: \.self) { index in
+                                    let message = networkManager.messages[index]
+                                    let isCurrentUserMessage = isMessageFromCurrentUser(message)
+                                    let shouldShowTimestamp = shouldShowTimestamp(for: index)
+                                    let isFirstInGroup: Bool = {
+                                        if index == 0 {
+                                            return true
+                                        }
+                                        let previousMessage = networkManager.messages[index - 1]
+                                        return isMessageFromCurrentUser(previousMessage) != isCurrentUserMessage
+                                    }()
+
+                                    HStack {
+                                        if isCurrentUserMessage {
+                                            Spacer()
+                                            VStack(alignment: .trailing) {
                                                 HStack {
-                                                    if isFirstInGroup, let email = extractEmailFromMessage(message) {
-                                                        if profileImageURLs[email] == nil {
-                                                            extractProfileImageURL(for: email) { url in
-                                                                profileImageURLs[email] = url
-                                                            }
-                                                        }
-                                                        if let profileImageURL = profileImageURLs[email] {
-                                                            AsyncImage(url: profileImageURL) { image in
-                                                                image.resizable()
-                                                                    .aspectRatio(contentMode: .fill)
-                                                                    .clipShape(Circle())
-                                                            } placeholder: {
-                                                                Circle().fill(Color.gray)
-                                                            }
-                                                            .frame(width: 40, height: 40)
-                                                        }
-                                                    }
-                                                    VStack(alignment: .leading) {
+                                                    VStack(alignment: .trailing) {
                                                         Text(messageWithoutLastParentheses(message))
                                                             .padding(10)
-                                                            .background(Color.gray.opacity(0.2))
+                                                            .background(Color("Accent"))
+                                                            .foregroundColor(.white)
                                                             .cornerRadius(20)
-                                                            .frame(maxWidth: 300, alignment: .leading)
+                                                            .frame(maxWidth: 300, alignment: .trailing)
                                                         if shouldShowTimestamp, let timestamp = extractLastParenthesesContent(from: message) {
                                                             Text(timestamp)
                                                                 .font(.caption)
                                                                 .foregroundColor(.gray)
-                                                                .padding(.leading, 5)
+                                                                .padding(.trailing, 5)
                                                         }
                                                     }
-                                                    Spacer()
+                                                    if isFirstInGroup {
+                                                        ProfileImageView(email: extractEmailFromMessage(message) ?? "ayaangrover@gmail.com")
+                                                    }
                                                 }
                                             }
+                                        } else {
+                                            HStack {
+                                                if isFirstInGroup {
+                                                    ProfileImageView(email: extractEmailFromMessage(message) ?? "ayaangrover@gmail.com")
+                                                }
+                                                VStack(alignment: .leading) {
+                                                    Text(messageWithoutLastParentheses(message))
+                                                        .padding(10)
+                                                        .background(Color.gray.opacity(0.2))
+                                                        .cornerRadius(20)
+                                                        .frame(maxWidth: 300, alignment: .leading)
+                                                    if shouldShowTimestamp, let timestamp = extractLastParenthesesContent(from: message) {
+                                                        Text(timestamp)
+                                                            .font(.caption)
+                                                            .foregroundColor(.gray)
+                                                            .padding(.leading, 5)
+                                                    }
+                                                }
+                                                Spacer()
+                                            }
                                         }
-                                        .padding(.horizontal)
-                                        .padding(.bottom, 2) // Adjust bottom padding
-                                        .id(message) // Assign unique ID for scroll position
                                     }
+                                    .padding(.horizontal)
+                                    .padding(.bottom, 2)
+                                    .id(message)
                                 }
-                                .padding(.bottom, 10) // Ensure space above input bar
-                                .onChange(of: networkManager.messages) { _ in
-                                    if let lastMessage = networkManager.messages.last {
-                                        withAnimation {
-                                            proxy.scrollTo(lastMessage, anchor: .bottom)
-                                        }
+                            }
+                            .padding(.bottom, 10) // Ensure space above input bar
+                            .onChange(of: networkManager.messages) { _ in
+                                if let lastMessage = networkManager.messages.last {
+                                    withAnimation {
+                                        proxy.scrollTo(lastMessage, anchor: .bottom)
                                     }
                                 }
                             }
                         }
-                        
-                        HStack {
-                            TextField("Enter your message", text: $newMessage)
-                                .textFieldStyle(RoundedBorderTextFieldStyle())
-                                .padding()
-                                .background(Color(UIColor.systemBackground))
-                                .frame(height:24)
-                                .cornerRadius(15)
-                            
-                            Button(action: sendMessage) {
-                                Image(systemName: "paperplane.fill")
-                                    .resizable()
-                                    .frame(width: 24, height: 24)
-                                    .foregroundColor(.white)
-                                    .padding()
-                                    .background(Color("Accent"))
-                                    .clipShape(Circle())
-                            }
+                    }
+                    
+                    HStack {
+                        TextField("Enter your message", text: $newMessage)
+                            .textFieldStyle(RoundedBorderTextFieldStyle())
                             .padding()
+                            .background(Color(UIColor.systemBackground))
+                            .frame(height:24)
+                            .cornerRadius(15)
+                        
+                        Button(action: sendMessage) {
+                            Image(systemName: "paperplane.fill")
+                                .resizable()
+                                .frame(width: 24, height: 24)
+                                .foregroundColor(.white)
+                                .padding()
+                                .background(Color("Accent"))
+                                .clipShape(Circle())
                         }
-                        .background(Color(UIColor.systemBackground))
+                        .padding()
                     }
-                    .padding(.bottom, 5) // Adjust padding if needed
-                } else {
-                    Button("Sign In with Google") {
-                        signInWithGoogle()
-                    }
+                    .background(Color(UIColor.systemBackground))
                 }
-            }
-            .onAppear {
-                if let currentUser = Auth.auth().currentUser {
-                    self.user = currentUser
-                    self.isSignedIn = true
-                    networkManager.fetchMessages()
-                    Timer.scheduledTimer(withTimeInterval: 0.2, repeats: true) { _ in
-                        networkManager.fetchMessages()
-                    }
+                .padding(.bottom, 5) // Adjust padding if needed
+            } else {
+                Button("Sign In with Google") {
+                    signInWithGoogle()
                 }
             }
         }
-
+        .onAppear {
+            if let currentUser = Auth.auth().currentUser {
+                self.user = currentUser
+                self.isSignedIn = true
+                networkManager.fetchMessages()
+                Timer.scheduledTimer(withTimeInterval: 0.2, repeats: true) { _ in
+                    networkManager.fetchMessages()
+                }
+            }
+        }
+    }
     
     private func sendMessage() {
         guard let user = user else { return }
@@ -323,23 +295,31 @@ struct ContentView: View {
         // This method should be adjusted according to how you extract the email from the message
         return nil
     }
-    
-    private func extractProfileImageURL(for email: String, completion: @escaping (URL?) -> Void) {
-        getUserPictureUrl(email: email) { url in
-            DispatchQueue.main.async {
-                completion(url)
-            }
+}
+
+
+
+
+
+func extractProfileImageURL(for email: String, completion: @escaping (URL?) -> Void) {
+    getUserPictureUrl(email: email) { url in
+        DispatchQueue.main.async {
+            completion(url)
         }
     }
 }
 
 func getUserPictureUrl(email: String, completion: @escaping (URL?) -> Void) {
     let defaultPictureUrl = URL(string: "https://lh3.googleusercontent.com/a-/AOh14Gj-cdUSUVoEge7rD5a063tQkyTDT3mripEuDZ0v=s100")
+<<<<<<< HEAD
+    let apiKey = "AIzaSyB_g3rCv-HN2JRV3KfbacaLD2XIKAlb9Zk"
+=======
     
     // Replace with your API key
-    let apiKey = "AIzaSyB_g3rCv-HN2JRV3KfbacaLD2XIKAlb9Zk"
+    let apiKey = "API_KEY"
     
     // Set up the request URL
+>>>>>>> 70a39a2b741c06ff5c74258618f1edb8341a0240
     let urlString = "https://people.googleapis.com/v1/people:searchDirectoryPeople?query=\(email)&readMask=photos&sources=DIRECTORY_SOURCE_TYPE_DOMAIN_PROFILE&key=\(apiKey)"
     
     guard let url = URL(string: urlString) else {
@@ -347,10 +327,8 @@ func getUserPictureUrl(email: String, completion: @escaping (URL?) -> Void) {
         return
     }
     
-    // Create the URL request
     let request = URLRequest(url: url)
     
-    // Make the request
     let task = URLSession.shared.dataTask(with: request) { data, response, error in
         guard let data = data, error == nil else {
             print("Error fetching data: \(String(describing: error))")
@@ -359,7 +337,6 @@ func getUserPictureUrl(email: String, completion: @escaping (URL?) -> Void) {
         }
         
         do {
-            // Parse the response JSON
             if let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
                let people = json["people"] as? [[String: Any]],
                let photos = people.first?["photos"] as? [[String: Any]],
@@ -378,22 +355,57 @@ func getUserPictureUrl(email: String, completion: @escaping (URL?) -> Void) {
     task.resume()
 }
 
-extension Color {
-    init(hex: String) {
-        let hex = hex.trimmingCharacters(in: .whitespacesAndNewlines)
-        let scanner = Scanner(string: hex)
-        if hex.hasPrefix("#") {
-            scanner.scanLocation = 1
+struct ProfileImageView: View {
+    let email: String
+    @State private var profileImage: UIImage?
+
+    var body: some View {
+        Group {
+            if let image = profileImage {
+                Image(uiImage: image)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .clipShape(Circle())
+                    .frame(width: 40, height: 40)
+            } else {
+                Circle().fill(Color.gray)
+                    .frame(width: 40, height: 40)
+            }
         }
-        var rgb: UInt64 = 0
-        scanner.scanHexInt64(&rgb)
-        self.init(
-            .sRGB,
-            red: Double((rgb >> 16) & 0xFF) / 255.0,
-            green: Double((rgb >> 8) & 0xFF) / 255.0,
-            blue: Double(rgb & 0xFF) / 255.0,
-            opacity: 1.0
-        )
+        .onAppear {
+            fetchProfileImage()
+        }
+    }
+
+    private func fetchProfileImageURL(for email: String, completion: @escaping (URL?) -> Void) {
+        let emailEscaped = email.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+        let docRef = Firestore.firestore().collection("users").document(emailEscaped)
+        
+        docRef.getDocument { document, error in
+            if let document = document, document.exists {
+                if let urlString = document.data()?["profileImageURL"] as? String, let url = URL(string: urlString) {
+                    completion(url)
+                } else {
+                    completion(nil)
+                }
+            } else {
+                completion(nil)
+            }
+        }
+    }
+    
+    private func fetchProfileImage() {
+        fetchProfileImageURL(for: email) { url in
+            guard let url = url else { return }
+            let task = URLSession.shared.dataTask(with: url) { data, _, _ in
+                if let data = data, let image = UIImage(data: data) {
+                    DispatchQueue.main.async {
+                        self.profileImage = image
+                    }
+                }
+            }
+            task.resume()
+        }
     }
 }
 
