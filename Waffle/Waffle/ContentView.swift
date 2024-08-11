@@ -311,15 +311,8 @@ func extractProfileImageURL(for email: String, completion: @escaping (URL?) -> V
 
 func getUserPictureUrl(email: String, completion: @escaping (URL?) -> Void) {
     let defaultPictureUrl = URL(string: "https://lh3.googleusercontent.com/a-/AOh14Gj-cdUSUVoEge7rD5a063tQkyTDT3mripEuDZ0v=s100")
-<<<<<<< HEAD
     let apiKey = "AIzaSyB_g3rCv-HN2JRV3KfbacaLD2XIKAlb9Zk"
-=======
-    
-    // Replace with your API key
-    let apiKey = "API_KEY"
-    
     // Set up the request URL
->>>>>>> 70a39a2b741c06ff5c74258618f1edb8341a0240
     let urlString = "https://people.googleapis.com/v1/people:searchDirectoryPeople?query=\(email)&readMask=photos&sources=DIRECTORY_SOURCE_TYPE_DOMAIN_PROFILE&key=\(apiKey)"
     
     guard let url = URL(string: urlString) else {
