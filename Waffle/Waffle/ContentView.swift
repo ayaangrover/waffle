@@ -1,15 +1,12 @@
 import SwiftUI
-import Firebase
-import GoogleSignIn
-import FirebaseAuth
 import FirebaseCore
-import Foundation
+import Firebase
 import FirebaseFirestore
-import FirebaseStorage
+import FirebaseAuth
+import GoogleSignIn
 
 struct ContentView: View {
-    
-    @State private var profileImageURLs: [String: URL] = [:]
+    @State private var profileImages: [String: UIImage] = [:]
     @State private var user: User?
     @State private var isSignedIn = false
     @StateObject private var networkManager = NetworkManager()
@@ -20,7 +17,7 @@ struct ContentView: View {
             if isSignedIn {
                 GeometryReader { geometry in
                     VStack(spacing: 0) {
-                        Spacer().frame(height: 90) // Spacing above the bar
+                        Spacer().frame(height: 90)
                         
                         HStack {
                             NavigationLink(destination: SettingsView()) {
@@ -36,7 +33,7 @@ struct ContentView: View {
                             Text("Messages")
                                 .font(.headline)
                                 .frame(maxWidth: .infinity)
-                                .padding(.bottom, 5) // Center text vertically
+                                .padding(.bottom, 5)
                             
                             Spacer()
                             
@@ -49,15 +46,15 @@ struct ContentView: View {
                             .padding(.trailing)
                         }
                         .padding(.horizontal)
-                        .frame(height: 50) // Height of the bar
+                        .frame(height: 50)
                         
                         Spacer()
                     }
                     .background(Color("Background"))
-                    .frame(width: geometry.size.width, height: 70) // Adjusted height of the grey bar
+                    .frame(width: geometry.size.width, height: 70)
                     .edgesIgnoringSafeArea(.top)
                 }
-                .frame(height: 70) // Ensure the bar's height matches
+                .frame(height: 70)
                 
                 VStack {
                     ScrollViewReader { proxy in
@@ -67,13 +64,7 @@ struct ContentView: View {
                                     let message = networkManager.messages[index]
                                     let isCurrentUserMessage = isMessageFromCurrentUser(message)
                                     let shouldShowTimestamp = shouldShowTimestamp(for: index)
-                                    let isFirstInGroup: Bool = {
-                                        if index == 0 {
-                                            return true
-                                        }
-                                        let previousMessage = networkManager.messages[index - 1]
-                                        return isMessageFromCurrentUser(previousMessage) != isCurrentUserMessage
-                                    }()
+                                    let isFirstInGroup = isFirstInGroup(at: index)
 
                                     HStack {
                                         if isCurrentUserMessage {
@@ -95,14 +86,14 @@ struct ContentView: View {
                                                         }
                                                     }
                                                     if isFirstInGroup {
-                                                        ProfileImageView(email: extractEmailFromMessage(message) ?? "ayaangrover@gmail.com")
+                                                        ProfileImageView(email: extractEmailFromMessage(message) ?? "", profileImages: $profileImages)
                                                     }
                                                 }
                                             }
                                         } else {
                                             HStack {
                                                 if isFirstInGroup {
-                                                    ProfileImageView(email: extractEmailFromMessage(message) ?? "ayaangrover@gmail.com")
+                                                    ProfileImageView(email: extractEmailFromMessage(message) ?? "", profileImages: $profileImages)
                                                 }
                                                 VStack(alignment: .leading) {
                                                     Text(messageWithoutLastParentheses(message))
@@ -126,7 +117,7 @@ struct ContentView: View {
                                     .id(message)
                                 }
                             }
-                            .padding(.bottom, 10) // Ensure space above input bar
+                            .padding(.bottom, 10)
                             .onChange(of: networkManager.messages) { _ in
                                 if let lastMessage = networkManager.messages.last {
                                     withAnimation {
@@ -158,7 +149,7 @@ struct ContentView: View {
                     }
                     .background(Color(UIColor.systemBackground))
                 }
-                .padding(.bottom, 5) // Adjust padding if needed
+                .padding(.bottom, 5)
             } else {
                 Button("Sign In with Google") {
                     signInWithGoogle()
@@ -188,32 +179,34 @@ struct ContentView: View {
     }
     
     private func signInWithGoogle() {
-        guard let clientID = FirebaseApp.app()?.options.clientID else {
-            print("Failed to get client ID")
+        guard let clientID = FirebaseApp.app()?.options.clientID else { return }
+        let config = GIDConfiguration(clientID: clientID)
+        GIDSignIn.sharedInstance.configuration = config
+
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let window = windowScene.windows.first,
+              let rootViewController = window.rootViewController else {
+            print("There is no root view controller!")
             return
         }
-        
-        _ = GIDConfiguration(clientID: clientID)
-        
-        GIDSignIn.sharedInstance.signIn(withPresenting: getRootViewController()) { result, error in
+
+        GIDSignIn.sharedInstance.signIn(withPresenting: rootViewController) { result, error in
             if let error = error {
-                print("Error during sign-in: \(error.localizedDescription)")
+                print("Error: \(error.localizedDescription)")
                 return
             }
-            
+
             guard let user = result?.user,
                   let idToken = user.idToken?.tokenString else {
-                print("Error retrieving tokens")
+                print("Error: ID token missing")
                 return
             }
-            let accessToken = user.accessToken.tokenString
-            
-            let credential = GoogleAuthProvider.credential(withIDToken: idToken, accessToken: accessToken)
-            
+
+            let credential = GoogleAuthProvider.credential(withIDToken: idToken, accessToken: user.accessToken.tokenString)
+
             Auth.auth().signIn(with: credential) { authResult, error in
                 if let error = error {
-                    print("Error signing in with Google: \(error.localizedDescription)")
-                    print("Full error details: \(error)")
+                    print("Error: \(error.localizedDescription)")
                     return
                 }
                 self.user = authResult?.user
@@ -233,17 +226,9 @@ struct ContentView: View {
         }
     }
     
-    private func getRootViewController() -> UIViewController {
-        guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-              let rootVC = scene.windows.first?.rootViewController else {
-            fatalError("Unable to get root view controller")
-        }
-        return rootVC
-    }
-    
     private func formattedCurrentDateTime() -> String {
         let formatter = DateFormatter()
-        formatter.dateFormat = "M/d/yy, h:mm a" // Excludes seconds
+        formatter.dateFormat = "M/d/yy, h:mm a"
         return formatter.string(from: Date())
     }
     
@@ -279,82 +264,39 @@ struct ContentView: View {
         let message = networkManager.messages[index]
         let isCurrentUserMessage = isMessageFromCurrentUser(message)
         
-        // Check if the next message is from a different user
         if index < networkManager.messages.count - 1 {
             let nextMessage = networkManager.messages[index + 1]
             let isNextMessageFromSameUser = isMessageFromCurrentUser(nextMessage) == isCurrentUserMessage
             return !isNextMessageFromSameUser
         }
         
-        // Always show timestamp for the last message
         return true
     }
     
+    private func isFirstInGroup(at index: Int) -> Bool {
+        if index == 0 { return true }
+        let previousMessage = networkManager.messages[index - 1]
+        let currentMessage = networkManager.messages[index]
+        return isMessageFromCurrentUser(previousMessage) != isMessageFromCurrentUser(currentMessage)
+    }
+    
     private func extractEmailFromMessage(_ message: String) -> String? {
-        // Assuming email is present in the message, adjust as needed
-        // This method should be adjusted according to how you extract the email from the message
-        return nil
+        let components = message.components(separatedBy: "Sent by ")
+        guard components.count > 1 else { return nil }
+        let nameAndTimestamp = components[1].components(separatedBy: " at ")
+        guard nameAndTimestamp.count > 0 else { return nil }
+        let name = nameAndTimestamp[0]
+        return "\(name.lowercased())@example.com"
     }
-}
-
-
-
-
-
-func extractProfileImageURL(for email: String, completion: @escaping (URL?) -> Void) {
-    getUserPictureUrl(email: email) { url in
-        DispatchQueue.main.async {
-            completion(url)
-        }
-    }
-}
-
-func getUserPictureUrl(email: String, completion: @escaping (URL?) -> Void) {
-    let defaultPictureUrl = URL(string: "https://lh3.googleusercontent.com/a-/AOh14Gj-cdUSUVoEge7rD5a063tQkyTDT3mripEuDZ0v=s100")
-    let apiKey = "AIzaSyB_g3rCv-HN2JRV3KfbacaLD2XIKAlb9Zk"
-    // Set up the request URL
-    let urlString = "https://people.googleapis.com/v1/people:searchDirectoryPeople?query=\(email)&readMask=photos&sources=DIRECTORY_SOURCE_TYPE_DOMAIN_PROFILE&key=\(apiKey)"
-    
-    guard let url = URL(string: urlString) else {
-        completion(defaultPictureUrl)
-        return
-    }
-    
-    let request = URLRequest(url: url)
-    
-    let task = URLSession.shared.dataTask(with: request) { data, response, error in
-        guard let data = data, error == nil else {
-            print("Error fetching data: \(String(describing: error))")
-            completion(defaultPictureUrl)
-            return
-        }
-        
-        do {
-            if let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
-               let people = json["people"] as? [[String: Any]],
-               let photos = people.first?["photos"] as? [[String: Any]],
-               let urlString = photos.first?["url"] as? String,
-               let url = URL(string: urlString) {
-                completion(url)
-            } else {
-                completion(defaultPictureUrl)
-            }
-        } catch {
-            print("Error parsing JSON: \(error)")
-            completion(defaultPictureUrl)
-        }
-    }
-    
-    task.resume()
 }
 
 struct ProfileImageView: View {
     let email: String
-    @State private var profileImage: UIImage?
+    @Binding var profileImages: [String: UIImage]
 
     var body: some View {
         Group {
-            if let image = profileImage {
+            if let image = profileImages[email] {
                 Image(uiImage: image)
                     .resizable()
                     .aspectRatio(contentMode: .fill)
@@ -363,47 +305,25 @@ struct ProfileImageView: View {
             } else {
                 Circle().fill(Color.gray)
                     .frame(width: 40, height: 40)
+                    .onAppear {
+                        fetchProfileImage()
+                    }
             }
-        }
-        .onAppear {
-            fetchProfileImage()
         }
     }
 
-    private func fetchProfileImageURL(for email: String, completion: @escaping (URL?) -> Void) {
-        let emailEscaped = email.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-        let docRef = Firestore.firestore().collection("users").document(emailEscaped)
+    private func fetchProfileImage() {
+        let docRef = Firestore.firestore().collection("users").document(email)
         
         docRef.getDocument { document, error in
-            if let document = document, document.exists {
-                if let urlString = document.data()?["profileImageURL"] as? String, let url = URL(string: urlString) {
-                    completion(url)
-                } else {
-                    completion(nil)
-                }
-            } else {
-                completion(nil)
-            }
-        }
-    }
-    
-    private func fetchProfileImage() {
-        fetchProfileImageURL(for: email) { url in
-            guard let url = url else { return }
-            let task = URLSession.shared.dataTask(with: url) { data, _, _ in
-                if let data = data, let image = UIImage(data: data) {
-                    DispatchQueue.main.async {
-                        self.profileImage = image
-                    }
+            if let document = document, document.exists,
+               let base64String = document.data()?["image"] as? String,
+               let imageData = Data(base64Encoded: base64String),
+               let image = UIImage(data: imageData) {
+                DispatchQueue.main.async {
+                    self.profileImages[email] = image
                 }
             }
-            task.resume()
         }
-    }
-}
-
-struct ContentView_Previews: PreviewProvider {
-    static var previews: some View {
-        ContentView()
     }
 }

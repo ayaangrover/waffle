@@ -43,7 +43,6 @@
 		3AD6A5D12C61A12E0037F09F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AD6A5D02C61A12C0037F09F /* AppDelegate.swift */; };
 		3AD6A5D62C61A1D50037F09F /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 3AD6A5D52C61A1D50037F09F /* GoogleSignIn */; };
 		3AD6A5D82C61A1D50037F09F /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 3AD6A5D72C61A1D50037F09F /* GoogleSignInSwift */; };
-		3AD6A5DA2C61A21A0037F09F /* ChatApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AD6A5D92C61A21A0037F09F /* ChatApp.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -58,7 +57,6 @@
 		3AA96B212C654B7000204823 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		3AA96B232C654DE400204823 /* NetworkManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkManager.swift; sourceTree = "<group>"; };
 		3AD6A5D02C61A12C0037F09F /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		3AD6A5D92C61A21A0037F09F /* ChatApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatApp.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -114,7 +112,6 @@
 				3AA96B212C654B7000204823 /* GoogleService-Info.plist */,
 				3A5EEF2B2C5F187900DD8690 /* WaffleApp.swift */,
 				3AD6A5D02C61A12C0037F09F /* AppDelegate.swift */,
-				3AD6A5D92C61A21A0037F09F /* ChatApp.swift */,
 				3A5EEF2D2C5F187900DD8690 /* ContentView.swift */,
 				3AA96B232C654DE400204823 /* NetworkManager.swift */,
 				3A266BA42C66D644006617F0 /* SettingsView.swift */,
@@ -238,7 +235,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				3AD6A5D12C61A12E0037F09F /* AppDelegate.swift in Sources */,
-				3AD6A5DA2C61A21A0037F09F /* ChatApp.swift in Sources */,
 				3AA96B242C654DE400204823 /* NetworkManager.swift in Sources */,
 				3A266BDE2C685B41006617F0 /* ImagePicker.swift in Sources */,
 				3A266BA52C66D644006617F0 /* SettingsView.swift in Sources */,
