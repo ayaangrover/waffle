@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import SwiftUI
 
 class NetworkManager: ObservableObject {
     @Published var messages: [String] = []
@@ -20,9 +21,16 @@ class NetworkManager: ObservableObject {
             }
             
             do {
-                let messages = try JSONDecoder().decode([String].self, from: data)
+                let fetchedMessages = try JSONDecoder().decode([String].self, from: data)
+                let processedMessages = fetchedMessages.map { message -> String in
+                    if EncryptionManager.isEncrypted(message) {
+                        return EncryptionManager.decrypt(message) ?? message
+                    } else {
+                        return message
+                    }
+                }
                 DispatchQueue.main.async {
-                    self.messages = messages
+                    self.messages = processedMessages
                 }
             } catch {
                 print("Error decoding messages: \(error)")
@@ -38,7 +46,9 @@ class NetworkManager: ObservableObject {
         request.httpMethod = "POST"
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
         
-        let formattedMessage = message.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+        let encryptedMessage = EncryptionManager.encrypt(message) ?? message
+        
+        let formattedMessage = encryptedMessage.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
         let body = "message=\(formattedMessage)"
         request.httpBody = body.data(using: .utf8)
         
@@ -54,6 +64,11 @@ class NetworkManager: ObservableObject {
             }
             
             print("Response from server: \(responseString)")
+            
+            // Fetch messages after sending to update the UI
+            DispatchQueue.main.async {
+                self.fetchMessages()
+            }
         }
         task.resume()
     }
