@@ -169,7 +169,10 @@ struct ContentView: View {
     }
     
     private func sendMessage() {
-        guard let user = user else { return }
+        guard let user = user else {
+            print("Cannot send message: User is not signed in")
+            return
+        }
         let trimmedMessage = newMessage.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedMessage.isEmpty else { return }
         
@@ -313,15 +316,30 @@ struct ProfileImageView: View {
     }
 
     private func fetchProfileImage() {
+        guard !email.isEmpty else {
+            print("Email is empty, cannot fetch profile image")
+            return
+        }
+        
         let docRef = Firestore.firestore().collection("users").document(email)
         
         docRef.getDocument { document, error in
+            if let error = error {
+                print("Error fetching profile image: \(error.localizedDescription)")
+                return
+            }
+            
             if let document = document, document.exists,
                let base64String = document.data()?["image"] as? String,
                let imageData = Data(base64Encoded: base64String),
                let image = UIImage(data: imageData) {
                 DispatchQueue.main.async {
                     self.profileImages[email] = image
+                }
+            } else {
+                print("No profile image found for email: \(email). Using default image.")
+                DispatchQueue.main.async {
+                    self.profileImages[email] = UIImage(systemName: "person.circle.fill")
                 }
             }
         }

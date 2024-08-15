@@ -2,18 +2,22 @@ import Foundation
 import CryptoKit
 
 class EncryptionManager {
-    // Use a constant string to derive the key, so it's consistent across app launches
-    private static let keyString = "thisappisnotinproductionyet"  // Replace with a secure, secret string
+    private static let keyString = "YourSecretKeyString"  // Ensure this is consistent
     private static let key: SymmetricKey = {
         let keyData = Data(keyString.utf8)
         return SymmetricKey(data: SHA256.hash(data: keyData))
     }()
     
     static func encrypt(_ string: String) -> String? {
-        guard let data = string.data(using: .utf8) else { return nil }
+        guard let data = string.data(using: .utf8) else {
+            print("Encryption failed: Unable to convert string to data")
+            return nil
+        }
         do {
             let sealedBox = try AES.GCM.seal(data, using: key)
-            return sealedBox.combined?.base64EncodedString()
+            let encrypted = sealedBox.combined?.base64EncodedString()
+            print("Encryption successful. Original length: \(string.count), Encrypted length: \(encrypted?.count ?? 0)")
+            return encrypted
         } catch {
             print("Encryption error: \(error)")
             return nil
@@ -21,19 +25,30 @@ class EncryptionManager {
     }
     
     static func decrypt(_ string: String) -> String? {
-        guard let data = Data(base64Encoded: string) else { return nil }
+        let padding = String(repeating: "=", count: string.count % 4)
+        let base64 = string.replacingOccurrences(of: "-", with: "+").replacingOccurrences(of: "_", with: "/") + padding
+        guard let data = Data(base64Encoded: base64) else {
+            print("Decryption failed: Invalid base64 encoding")
+            return nil
+        }
         do {
             let sealedBox = try AES.GCM.SealedBox(combined: data)
             let decryptedData = try AES.GCM.open(sealedBox, using: key)
-            return String(data: decryptedData, encoding: .utf8)
+            guard let decryptedString = String(data: decryptedData, encoding: .utf8) else {
+                print("Decryption failed: Unable to convert data to string")
+                return nil
+            }
+            print("Decryption successful. Encrypted length: \(string.count), Decrypted length: \(decryptedString.count)")
+            return decryptedString
         } catch {
-            // Instead of printing the error, return nil
+            print("Decryption error: \(error)")
             return nil
         }
     }
     
     static func isEncrypted(_ string: String) -> Bool {
-        guard let _ = Data(base64Encoded: string) else { return false }
-        return decrypt(string) != nil
+        let base64Regex = "^[A-Za-z0-9+/]*={0,2}$"
+        let predicate = NSPredicate(format: "SELF MATCHES %@", base64Regex)
+        return predicate.evaluate(with: string)
     }
 }
