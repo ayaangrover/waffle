@@ -27,8 +27,16 @@ class NetworkManager: ObservableObject {
                 let fetchedMessages = try JSONDecoder().decode([String].self, from: data)
                 let processedMessages = fetchedMessages.compactMap { message -> String? in
                     print("Processing message: \(message)")
-                    if EncryptionManager.isEncrypted(message) {
-                        return EncryptionManager.decrypt(message)
+                    // Remove any spaces that might have been added
+                    let cleanedMessage = message.replacingOccurrences(of: " ", with: "")
+                    if EncryptionManager.isEncrypted(cleanedMessage) {
+                        if let decryptedMessage = EncryptionManager.decrypt(cleanedMessage) {
+                            print("Successfully decrypted: \(decryptedMessage)")
+                            return decryptedMessage
+                        } else {
+                            print("Failed to decrypt message: \(cleanedMessage)")
+                            return "This message uses a different message encryption. Tell this user to update their app!"
+                        }
                     } else {
                         return message
                     }
@@ -56,8 +64,12 @@ class NetworkManager: ObservableObject {
         let encryptedMessage = EncryptionManager.encrypt(message) ?? message
         print("Original message: \(message)")
         print("Encrypted message: \(encryptedMessage)")
-        
-        let formattedMessage = encryptedMessage.replacingOccurrences(of: "+", with: "-").replacingOccurrences(of: "/", with: "_").replacingOccurrences(of: "=", with: "")        
+
+        let formattedMessage = encryptedMessage
+            .replacingOccurrences(of: "+", with: "-")
+            .replacingOccurrences(of: "/", with: "_")
+            .replacingOccurrences(of: "=", with: "")
+            .addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
         let body = "message=\(formattedMessage)"
         request.httpBody = body.data(using: .utf8)
         

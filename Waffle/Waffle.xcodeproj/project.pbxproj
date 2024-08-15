@@ -39,7 +39,7 @@
 		3A5EEF332C5F187B00DD8690 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3A5EEF322C5F187B00DD8690 /* Preview Assets.xcassets */; };
 		3A5F408C2C6E97550005D636 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A5F408B2C6E97550005D636 /* SettingsView.swift */; };
 		3A8616742C6E9A9A0030FA05 /* EncryptionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A8616732C6E9A990030FA05 /* EncryptionManager.swift */; };
-		3AA96B222C654B7000204823 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3AA96B212C654B7000204823 /* GoogleService-Info.plist */; };
+		3A8616762C6EA8820030FA05 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3A8616752C6EA8820030FA05 /* GoogleService-Info.plist */; };
 		3AA96B242C654DE400204823 /* NetworkManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AA96B232C654DE400204823 /* NetworkManager.swift */; };
 		3AD6A5D12C61A12E0037F09F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AD6A5D02C61A12C0037F09F /* AppDelegate.swift */; };
 		3AD6A5D62C61A1D50037F09F /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 3AD6A5D52C61A1D50037F09F /* GoogleSignIn */; };
@@ -55,8 +55,8 @@
 		3A5EEF392C5F22E900DD8690 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		3A5F408B2C6E97550005D636 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		3A8616732C6E9A990030FA05 /* EncryptionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EncryptionManager.swift; sourceTree = "<group>"; };
+		3A8616752C6EA8820030FA05 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		3AA96B1C2C640F7500204823 /* Waffle.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Waffle.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		3AA96B212C654B7000204823 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		3AA96B232C654DE400204823 /* NetworkManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkManager.swift; sourceTree = "<group>"; };
 		3AD6A5D02C61A12C0037F09F /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -111,16 +111,16 @@
 			isa = PBXGroup;
 			children = (
 				3A5EEF392C5F22E900DD8690 /* Info.plist */,
-				3AA96B212C654B7000204823 /* GoogleService-Info.plist */,
+				3A8616752C6EA8820030FA05 /* GoogleService-Info.plist */,
 				3A5EEF2B2C5F187900DD8690 /* WaffleApp.swift */,
 				3AD6A5D02C61A12C0037F09F /* AppDelegate.swift */,
 				3A5EEF2D2C5F187900DD8690 /* ContentView.swift */,
 				3A5F408B2C6E97550005D636 /* SettingsView.swift */,
 				3AA96B232C654DE400204823 /* NetworkManager.swift */,
 				3A8616732C6E9A990030FA05 /* EncryptionManager.swift */,
+				3A266BDD2C685B41006617F0 /* ImagePicker.swift */,
 				3A5EEF2F2C5F187B00DD8690 /* Assets.xcassets */,
 				3A5EEF312C5F187B00DD8690 /* Preview Content */,
-				3A266BDD2C685B41006617F0 /* ImagePicker.swift */,
 			);
 			path = Waffle;
 			sourceTree = "<group>";
@@ -226,7 +226,7 @@
 			files = (
 				3A5EEF332C5F187B00DD8690 /* Preview Assets.xcassets in Resources */,
 				3A5EEF302C5F187B00DD8690 /* Assets.xcassets in Resources */,
-				3AA96B222C654B7000204823 /* GoogleService-Info.plist in Resources */,
+				3A8616762C6EA8820030FA05 /* GoogleService-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

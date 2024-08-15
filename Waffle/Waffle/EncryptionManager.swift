@@ -2,7 +2,7 @@ import Foundation
 import CryptoKit
 
 class EncryptionManager {
-    private static let keyString = "YourSecretKeyString"  // Ensure this is consistent
+    private static let keyString = "notInProduction"
     private static let key: SymmetricKey = {
         let keyData = Data(keyString.utf8)
         return SymmetricKey(data: SHA256.hash(data: keyData))
@@ -24,9 +24,17 @@ class EncryptionManager {
         }
     }
     
+    static func isEncrypted(_ string: String) -> Bool {
+        let base64Regex = "^[A-Za-z0-9+/\\-_]*={0,2}$"
+        let predicate = NSPredicate(format: "SELF MATCHES %@", base64Regex)
+        return predicate.evaluate(with: string)
+    }
+
     static func decrypt(_ string: String) -> String? {
-        let padding = String(repeating: "=", count: string.count % 4)
-        let base64 = string.replacingOccurrences(of: "-", with: "+").replacingOccurrences(of: "_", with: "/") + padding
+        var base64 = string.replacingOccurrences(of: "-", with: "+").replacingOccurrences(of: "_", with: "/")
+        if base64.count % 4 != 0 {
+            base64.append(String(repeating: "=", count: 4 - base64.count % 4))
+        }
         guard let data = Data(base64Encoded: base64) else {
             print("Decryption failed: Invalid base64 encoding")
             return nil
@@ -44,11 +52,5 @@ class EncryptionManager {
             print("Decryption error: \(error)")
             return nil
         }
-    }
-    
-    static func isEncrypted(_ string: String) -> Bool {
-        let base64Regex = "^[A-Za-z0-9+/]*={0,2}$"
-        let predicate = NSPredicate(format: "SELF MATCHES %@", base64Regex)
-        return predicate.evaluate(with: string)
     }
 }
