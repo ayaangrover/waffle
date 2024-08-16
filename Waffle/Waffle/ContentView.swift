@@ -81,32 +81,17 @@ struct ContentView: View {
                                                 VStack(alignment: .trailing) {
                                                     HStack {
                                                         VStack(alignment: .trailing, spacing: 5) {
-                                                            Text(processedMessage.text)
-                                                                .padding(10)
-                                                                .background(Color("Accent"))
-                                                                .foregroundColor(.white)
-                                                                .cornerRadius(20)
-                                                                .frame(maxWidth: 300, alignment: .trailing)
+                                                            if !processedMessage.text.isEmpty {
+                                                                Text(processedMessage.text)
+                                                                    .padding(10)
+                                                                    .background(Color("Accent"))
+                                                                    .foregroundColor(.white)
+                                                                    .cornerRadius(20)
+                                                                    .frame(maxWidth: 300, alignment: .trailing)
+                                                            }
                                                             
-                                                            if let imageURL = processedMessage.imageURL {
-                                                                AsyncImage(url: imageURL) { phase in
-                                                                    switch phase {
-                                                                    case .empty:
-                                                                        ProgressView()
-                                                                    case .success(let image):
-                                                                        image
-                                                                            .resizable()
-                                                                            .aspectRatio(contentMode: .fit)
-                                                                            .frame(maxWidth: 300, maxHeight: 300)
-                                                                            .cornerRadius(20)
-                                                                    case .failure:
-                                                                        Text("Failed to load image")
-                                                                            .foregroundColor(.red)
-                                                                    @unknown default:
-                                                                        EmptyView()
-                                                                    }
-                                                                }
-                                                                .frame(maxWidth: 300, maxHeight: 300)
+                                                            if let mediaURL = processedMessage.mediaURL {
+                                                                MediaView(url: mediaURL, mediaType: processedMessage.mediaType)
                                                             }
                                                             
                                                             if shouldShowTimestamp {
@@ -127,31 +112,16 @@ struct ContentView: View {
                                                         ProfileImageView(imageURL: profilePictureURL)
                                                     }
                                                     VStack(alignment: .leading, spacing: 5) {
-                                                        Text(processedMessage.text)
-                                                            .padding(10)
-                                                            .background(Color.gray.opacity(0.2))
-                                                            .cornerRadius(20)
-                                                            .frame(maxWidth: 300, alignment: .leading)
+                                                        if !processedMessage.text.isEmpty {
+                                                            Text(processedMessage.text)
+                                                                .padding(10)
+                                                                .background(Color.gray.opacity(0.2))
+                                                                .cornerRadius(20)
+                                                                .frame(maxWidth: 300, alignment: .leading)
+                                                        }
                                                         
-                                                        if let imageURL = processedMessage.imageURL {
-                                                            AsyncImage(url: imageURL) { phase in
-                                                                switch phase {
-                                                                case .empty:
-                                                                    ProgressView()
-                                                                case .success(let image):
-                                                                    image
-                                                                        .resizable()
-                                                                        .aspectRatio(contentMode: .fit)
-                                                                        .frame(maxWidth: 300, maxHeight: 300)
-                                                                        .cornerRadius(20)
-                                                                case .failure:
-                                                                    Text("Failed to load image")
-                                                                        .foregroundColor(.red)
-                                                                @unknown default:
-                                                                    EmptyView()
-                                                                }
-                                                            }
-                                                            .frame(maxWidth: 300, maxHeight: 300)
+                                                        if let mediaURL = processedMessage.mediaURL {
+                                                            MediaView(url: mediaURL, mediaType: processedMessage.mediaType)
                                                         }
                                                         
                                                         if shouldShowTimestamp {
@@ -241,18 +211,30 @@ struct ContentView: View {
         let cleanedMessage = removeParentheses(from: message)
         let components = cleanedMessage.components(separatedBy: .whitespacesAndNewlines)
         var text = ""
-        var imageURL: URL?
+        var mediaURL: URL?
+        var mediaType: ProcessedMessage.MediaType = .none
         
         for component in components {
-            if component.lowercased().hasSuffix(".png") || component.lowercased().hasSuffix(".jpg") || component.lowercased().hasSuffix(".jpeg"),
-               let url = URL(string: component) {
-                imageURL = url
+            if let url = URL(string: component) {
+                let lowercasedPath = url.pathExtension.lowercased()
+                if ["png", "jpg", "jpeg"].contains(lowercasedPath) {
+                    mediaURL = url
+                    mediaType = .image
+                } else if lowercasedPath == "gif" {
+                    mediaURL = url
+                    mediaType = .gif
+                } else if lowercasedPath == "heic" {
+                    mediaURL = url
+                    mediaType = .heic
+                } else if !component.isEmpty {
+                    text += component + " "
+                }
             } else if !component.isEmpty {
                 text += component + " "
             }
         }
         
-        return ProcessedMessage(text: text.trimmingCharacters(in: .whitespacesAndNewlines), imageURL: imageURL)
+        return ProcessedMessage(text: text.trimmingCharacters(in: .whitespacesAndNewlines), mediaURL: mediaURL, mediaType: mediaType)
     }
 
     func removeParentheses(from string: String) -> String {
@@ -380,11 +362,6 @@ struct ContentView: View {
         return ""
     }
     
-    struct ProcessedMessage {
-        let text: String
-        let imageURL: URL?
-    }
-    
     private func extractSenderInfoAndTimestamp(from senderInfo: String) -> (String, String) {
         // Remove leading and trailing parentheses from the entire string
         let cleanedInfo = senderInfo.trimmingCharacters(in: CharacterSet(charactersIn: "()"))
@@ -488,5 +465,89 @@ struct LoginView: View {
         .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity)
         .background(Color("Background"))
         .edgesIgnoringSafeArea(.all)
+    }
+}
+
+struct MediaView: View {
+    let url: URL
+    let mediaType: ProcessedMessage.MediaType
+    
+    var body: some View {
+        Group {
+            switch mediaType {
+            case .image, .heic:
+                AsyncImage(url: url) { phase in
+                    switch phase {
+                    case .empty:
+                        ProgressView()
+                    case .success(let image):
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                    case .failure:
+                        Text("Failed to load image")
+                            .foregroundColor(.red)
+                    @unknown default:
+                        EmptyView()
+                    }
+                }
+            case .gif:
+                GIFView(url: url)
+            case .none:
+                EmptyView()
+            }
+        }
+        .frame(maxWidth: 300, maxHeight: 300)
+        .cornerRadius(20)
+    }
+}
+
+struct GIFView: UIViewRepresentable {
+    let url: URL
+    
+    func makeUIView(context: Context) -> UIImageView {
+        let imageView = UIImageView()
+        imageView.contentMode = .scaleAspectFit
+        return imageView
+    }
+    
+    func updateUIView(_ uiView: UIImageView, context: Context) {
+        DispatchQueue.global().async {
+            if let data = try? Data(contentsOf: url),
+               let source = CGImageSourceCreateWithData(data as CFData, nil) {
+                let imageCount = CGImageSourceGetCount(source)
+                var images = [UIImage]()
+                var duration: TimeInterval = 0
+                
+                for i in 0..<imageCount {
+                    if let image = CGImageSourceCreateImageAtIndex(source, i, nil) {
+                        images.append(UIImage(cgImage: image))
+                    }
+                    
+                    if let properties = CGImageSourceCopyPropertiesAtIndex(source, i, nil) as? [String: Any],
+                       let gifProperties = properties[kCGImagePropertyGIFDictionary as String] as? [String: Any] {
+                        if let delayTime = gifProperties[kCGImagePropertyGIFUnclampedDelayTime as String] as? Double {
+                            duration += delayTime
+                        }
+                    }
+                }
+                
+                DispatchQueue.main.async {
+                    uiView.animationImages = images
+                    uiView.animationDuration = duration
+                    uiView.startAnimating()
+                }
+            }
+        }
+    }
+}
+
+struct ProcessedMessage {
+    let text: String
+    let mediaURL: URL?
+    let mediaType: MediaType
+    
+    enum MediaType {
+        case none, image, gif, heic
     }
 }
