@@ -62,9 +62,15 @@ struct ContentView: View {
                             VStack(spacing: 10) {
                                 ForEach(0..<networkManager.messages.count, id: \.self) { index in
                                     let message = networkManager.messages[index]
-                                    let isCurrentUserMessage = isMessageFromCurrentUser(message)
+                                    let messageParts = message.components(separatedBy: "||")
+                                    let messageContent = messageParts[0]
+                                    let profilePictureURL = messageParts.count > 1 ? messageParts[1] : ""
+                                    let senderInfo = messageParts.count > 2 ? messageParts[2] : ""
+                                    
+                                    let isCurrentUserMessage = isMessageFromCurrentUser(senderInfo)
                                     let shouldShowTimestamp = shouldShowTimestamp(for: index)
                                     let isFirstInGroup = isFirstInGroup(at: index)
+                                    let (senderName, timestamp) = extractSenderInfoAndTimestamp(from: senderInfo)
 
                                     HStack {
                                         if isCurrentUserMessage {
@@ -72,37 +78,37 @@ struct ContentView: View {
                                             VStack(alignment: .trailing) {
                                                 HStack {
                                                     VStack(alignment: .trailing) {
-                                                        Text(messageWithoutLastParentheses(message))
+                                                        Text(messageContent)
                                                             .padding(10)
                                                             .background(Color("Accent"))
                                                             .foregroundColor(.white)
                                                             .cornerRadius(20)
                                                             .frame(maxWidth: 300, alignment: .trailing)
-                                                        if shouldShowTimestamp, let timestamp = extractLastParenthesesContent(from: message) {
-                                                            Text(timestamp)
+                                                        if shouldShowTimestamp {
+                                                            Text("\(senderName) • \(timestamp)")
                                                                 .font(.caption)
                                                                 .foregroundColor(.gray)
                                                                 .padding(.trailing, 5)
                                                         }
                                                     }
                                                     if isFirstInGroup {
-                                                        ProfileImageView(imageURL: extractProfilePictureURL(message))
+                                                        ProfileImageView(imageURL: profilePictureURL)
                                                     }
                                                 }
                                             }
                                         } else {
                                             HStack {
                                                 if isFirstInGroup {
-                                                    ProfileImageView(imageURL: extractProfilePictureURL(message))
+                                                    ProfileImageView(imageURL: profilePictureURL)
                                                 }
                                                 VStack(alignment: .leading) {
-                                                    Text(messageWithoutLastParentheses(message))
+                                                    Text(messageContent)
                                                         .padding(10)
                                                         .background(Color.gray.opacity(0.2))
                                                         .cornerRadius(20)
                                                         .frame(maxWidth: 300, alignment: .leading)
-                                                    if shouldShowTimestamp, let timestamp = extractLastParenthesesContent(from: message) {
-                                                        Text(timestamp)
+                                                    if shouldShowTimestamp {
+                                                        Text("\(senderName) • \(timestamp)")
                                                             .font(.caption)
                                                             .foregroundColor(.gray)
                                                             .padding(.leading, 5)
@@ -133,17 +139,18 @@ struct ContentView: View {
                             .textFieldStyle(RoundedBorderTextFieldStyle())
                             .padding()
                             .background(Color(UIColor.systemBackground))
-                            .frame(height:24)
+                            .frame(width:100, height:24)
                             .cornerRadius(15)
                         
                         Button(action: sendMessage) {
                             Image(systemName: "paperplane.fill")
                                 .resizable()
-                                .frame(width: 24, height: 24)
+                                .frame(width: 12, height: 12)
                                 .foregroundColor(.white)
                                 .padding()
                                 .background(Color("Accent"))
                                 .clipShape(Circle())
+                            .frame(width: 12, height: 12)
                         }
                         .padding()
                     }
@@ -177,7 +184,7 @@ struct ContentView: View {
         // Get the user's profile picture URL
         let profilePictureURL = user.photoURL?.absoluteString ?? ""
         
-        let formattedMessage = "\(trimmedMessage) \(profilePictureURL) (Sent by \(user.displayName?.components(separatedBy: " ").first ?? "User") at \(formattedCurrentDateTime()))"
+        let formattedMessage = "\(trimmedMessage)||\(profilePictureURL)||(Sent by \(user.displayName?.components(separatedBy: " ").first ?? "User") at \(formattedCurrentDateTime()))"
         networkManager.sendMessage(formattedMessage)
         newMessage = ""
     }
@@ -236,12 +243,6 @@ struct ContentView: View {
         return formatter.string(from: Date())
     }
     
-    private func isMessageFromCurrentUser(_ message: String) -> Bool {
-        guard let user = user else { return false }
-        let firstName = user.displayName?.components(separatedBy: " ").first ?? ""
-        return message.contains("Sent by \(firstName) at")
-    }
-    
     private func extractLastParenthesesContent(from message: String) -> String? {
         guard let lastOpenParenIndex = message.lastIndex(of: "("),
               let lastCloseParenIndex = message.lastIndex(of: ")"),
@@ -277,11 +278,46 @@ struct ContentView: View {
         return true
     }
     
+    private func isMessageFromCurrentUser(_ senderInfo: String) -> Bool {
+        guard let user = user else { return false }
+        let firstName = user.displayName?.components(separatedBy: " ").first ?? ""
+        return senderInfo.contains("Sent by \(firstName) at")
+    }
+
+    private func extractTimestamp(from senderInfo: String) -> String {
+        let components = senderInfo.components(separatedBy: "at ")
+        if components.count > 1 {
+            var timestamp = components[1].trimmingCharacters(in: .whitespaces)
+            // Remove the trailing parenthesis
+            if timestamp.hasSuffix(")") {
+                timestamp = String(timestamp.dropLast())
+            }
+            return timestamp
+        }
+        return ""
+    }
+    
+    private func extractSenderInfoAndTimestamp(from senderInfo: String) -> (String, String) {
+        let components = senderInfo.components(separatedBy: "at ")
+        if components.count > 1 {
+            let senderName = components[0].replacingOccurrences(of: "Sent by ", with: "").trimmingCharacters(in: .whitespaces)
+            var timestamp = components[1].trimmingCharacters(in: .whitespaces)
+            // Remove the trailing parenthesis
+            if timestamp.hasSuffix(")") {
+                timestamp = String(timestamp.dropLast())
+            }
+            return (senderName, timestamp)
+        }
+        return ("", "")
+    }
+
     private func isFirstInGroup(at index: Int) -> Bool {
         if index == 0 { return true }
-        let previousMessage = networkManager.messages[index - 1]
-        let currentMessage = networkManager.messages[index]
-        return isMessageFromCurrentUser(previousMessage) != isMessageFromCurrentUser(currentMessage)
+        let previousMessage = networkManager.messages[index - 1].components(separatedBy: "||")
+        let currentMessage = networkManager.messages[index].components(separatedBy: "||")
+        let previousSenderInfo = previousMessage.count > 2 ? previousMessage[2] : ""
+        let currentSenderInfo = currentMessage.count > 2 ? currentMessage[2] : ""
+        return isMessageFromCurrentUser(previousSenderInfo) != isMessageFromCurrentUser(currentSenderInfo)
     }
     
     private func extractProfilePictureURL(_ message: String) -> String {
