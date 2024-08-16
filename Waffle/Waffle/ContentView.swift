@@ -20,8 +20,8 @@ struct ContentView: View {
                         Spacer().frame(height: 90)
                         
                         HStack {
-                            NavigationLink(destination: MemberView()) {
-                                Image(systemName: "person.2")
+                            NavigationLink(destination: SettingsView()) {
+                                Image(systemName: "gearshape")
                                     .resizable()
                                     .frame(width: 24, height: 24)
                                     .foregroundColor(Color("Icons"))
@@ -31,10 +31,10 @@ struct ContentView: View {
                             Spacer()
                             
                             Text("Messages")
+                                .font(.headline)
                                 .frame(maxWidth: .infinity)
                                 .padding(.bottom, 5)
-                                .Montserrat(20)
-                                .fontWeight(.medium)
+                            
                             Spacer()
                             
                             Button(action: signOut) {
@@ -102,9 +102,9 @@ struct ContentView: View {
                                                                 
                                                                 if shouldShowTimestamp {
                                                                     Text("\(senderName) • \(timestamp)")
+                                                                        .font(.caption)
                                                                         .foregroundColor(.gray)
                                                                         .padding(.trailing, 5)
-                                                                        .Montserrat(15)
                                                                 }
                                                             }
                                                             if isFirstInGroup {
@@ -142,7 +142,6 @@ struct ContentView: View {
                             .background(Color(UIColor.systemBackground))
                             .frame(width:300, height:24)
                             .cornerRadius(15)
-                            .Montserrat(15)
                         
                         Button(action: sendMessage) {
                             Image(systemName: "paperplane.fill")
@@ -486,9 +485,9 @@ struct LoginView: View {
                         .frame(width: 20, height: 20)
                     
                     Text("Sign in with Google")
-                        .fontWeight(.bold)
-                        .Montserrat(18)
+                        .fontWeight(.medium)
                         .foregroundColor(.white)
+                        .montserratAlternates(18, weight: .bold)
                 }
                 .padding()
                 .frame(minWidth: 0, maxWidth: .infinity)
@@ -610,14 +609,12 @@ struct YouTubePreviewView: View {
 
                         VStack(alignment: .leading, spacing: 4) {
                             Text(videoInfo.title)
+                                .font(.caption)
                                 .lineLimit(3)
                                 .multilineTextAlignment(.leading)
-                                .padding(.top, 10)
-                                .fontWeight(.medium)
-                                .Montserrat(15)
                             Text("YouTube")
+                                .font(.caption2)
                                 .foregroundColor(.secondary)
-                                .Montserrat(10)
                         }
                         Spacer()
                     }
@@ -655,70 +652,4 @@ struct YouTubeVideoInfo: Identifiable {
     let id: String
     let title: String
     let thumbnailURL: URL
-}
-
-struct User: Identifiable {
-    let id: String
-    let name: String
-    let email: String
-    let profileImageURL: String
-}
-
-class UserService: ObservableObject {
-    @Published var users: [User] = []
-    
-    func fetchUsers() {
-        guard let url = URL(string: "https://your-api-endpoint.com/users") else { return }
-        
-        URLSession.shared.dataTask(with: url) { (data, response, error) in
-            if let error = error {
-                print("Error fetching users: \(error)")
-                return
-            }
-            
-            guard let data = data else { return }
-            
-            do {
-                let users = try JSONDecoder().decode([User].self, from: data)
-                DispatchQueue.main.async {
-                    self.users = users
-                }
-            } catch {
-                print("Error decoding users: \(error)")
-            }
-        }.resume()
-    }
-}
-
-struct MemberView: View {
-    @ObservedObject private var userService = UserService()
-    
-    var body: some View {
-        NavigationView {
-            List(userService.users) { user in
-                HStack {
-                    AsyncImage(url: URL(string: user.profileImageURL)) { image in
-                        image.resizable()
-                    } placeholder: {
-                        Image(systemName: "person.circle.fill")
-                            .resizable()
-                    }
-                    .frame(width: 50, height: 50)
-                    .clipShape(Circle())
-                    
-                    VStack(alignment: .leading) {
-                        Text(user.name)
-                            .font(.headline)
-                        Text(user.email)
-                            .font(.subheadline)
-                            .foregroundColor(.gray)
-                    }
-                }
-            }
-            .navigationTitle("Members")
-            .onAppear {
-                userService.fetchUsers()
-            }
-        }
-    }
 }
