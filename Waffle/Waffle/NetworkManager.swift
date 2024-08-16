@@ -18,6 +18,7 @@ class NetworkManager: ObservableObject {
                 return
             }
             
+            // Debugging
             guard let data = data else {
                 print("No data received")
                 return
@@ -25,25 +26,25 @@ class NetworkManager: ObservableObject {
             
             do {
                 let fetchedMessages = try JSONDecoder().decode([String].self, from: data)
-                let processedMessages = fetchedMessages.compactMap { message -> String? in
-                    print("Processing message: \(message)")
-                    // Remove any spaces that might have been added
-                    let cleanedMessage = message.replacingOccurrences(of: " ", with: "")
-                    if EncryptionManager.isEncrypted(cleanedMessage) {
-                        if let decryptedMessage = EncryptionManager.decrypt(cleanedMessage) {
-                            print("Successfully decrypted: \(decryptedMessage)")
-                            return decryptedMessage
-                        } else {
-                            print("Failed to decrypt message: \(cleanedMessage)")
-                            return "This message uses a different message encryption. Tell this user to update their app!"
+                        let processedMessages = fetchedMessages.compactMap { message -> String? in
+                            print("Processing message: \(message)")
+                            // Remove any spaces that might have been added
+                            let cleanedMessage = message.replacingOccurrences(of: " ", with: "")
+                            if EncryptionManager.isEncrypted(cleanedMessage) {
+                                if let decryptedMessage = EncryptionManager.decrypt(cleanedMessage) {
+                                    print("Successfully decrypted: \(decryptedMessage)")
+                                    return decryptedMessage
+                                } else {
+                                    print("Failed to decrypt message: \(cleanedMessage)")
+                                    return "This message uses a different message encryption. Tell this user to update their app!"
+                                }
+                            } else {
+                                return message
+                            }
                         }
-                    } else {
-                        return message
-                    }
-                }
-                DispatchQueue.main.async {
-                    self.messages = processedMessages
-                }
+                        DispatchQueue.main.async {
+                            self.messages = processedMessages
+                        }
             } catch {
                 print("Error decoding messages: \(error)")
             }
@@ -61,10 +62,13 @@ class NetworkManager: ObservableObject {
         request.httpMethod = "POST"
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
         
+        // Encryption
         let encryptedMessage = EncryptionManager.encrypt(message) ?? message
         print("Original message: \(message)")
         print("Encrypted message: \(encryptedMessage)")
 
+        // This makes sure the message is ready for encryption.
+        // It also ensures there are no discrepancies between what is sent and what is recieved.
         let formattedMessage = encryptedMessage
             .replacingOccurrences(of: "+", with: "-")
             .replacingOccurrences(of: "/", with: "_")
@@ -79,6 +83,7 @@ class NetworkManager: ObservableObject {
                 return
             }
             
+            // Debugging
             guard let data = data, let responseString = String(data: data, encoding: .utf8) else {
                 print("No data received from send request")
                 return

@@ -86,14 +86,14 @@ struct ContentView: View {
                                                         }
                                                     }
                                                     if isFirstInGroup {
-                                                        ProfileImageView(email: extractEmailFromMessage(message) ?? "", profileImages: $profileImages)
+                                                        ProfileImageView(imageURL: extractProfilePictureURL(message))
                                                     }
                                                 }
                                             }
                                         } else {
                                             HStack {
                                                 if isFirstInGroup {
-                                                    ProfileImageView(email: extractEmailFromMessage(message) ?? "", profileImages: $profileImages)
+                                                    ProfileImageView(imageURL: extractProfilePictureURL(message))
                                                 }
                                                 VStack(alignment: .leading) {
                                                     Text(messageWithoutLastParentheses(message))
@@ -151,9 +151,7 @@ struct ContentView: View {
                 }
                 .padding(.bottom, 5)
             } else {
-                Button("Sign In with Google") {
-                    signInWithGoogle()
-                }
+                LoginView(signInAction: signInWithGoogle)
             }
         }
         .onAppear {
@@ -176,7 +174,10 @@ struct ContentView: View {
         let trimmedMessage = newMessage.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedMessage.isEmpty else { return }
         
-        let formattedMessage = "\(trimmedMessage) \n(Sent by \(user.displayName?.components(separatedBy: " ").first ?? "User") at \(formattedCurrentDateTime()))"
+        // Get the user's profile picture URL
+        let profilePictureURL = user.photoURL?.absoluteString ?? ""
+        
+        let formattedMessage = "\(trimmedMessage) \(profilePictureURL) (Sent by \(user.displayName?.components(separatedBy: " ").first ?? "User") at \(formattedCurrentDateTime()))"
         networkManager.sendMessage(formattedMessage)
         newMessage = ""
     }
@@ -283,23 +284,22 @@ struct ContentView: View {
         return isMessageFromCurrentUser(previousMessage) != isMessageFromCurrentUser(currentMessage)
     }
     
-    private func extractEmailFromMessage(_ message: String) -> String? {
-        let components = message.components(separatedBy: "Sent by ")
-        guard components.count > 1 else { return nil }
-        let nameAndTimestamp = components[1].components(separatedBy: " at ")
-        guard nameAndTimestamp.count > 0 else { return nil }
-        let name = nameAndTimestamp[0]
-        return "\(name.lowercased())@example.com"
+    private func extractProfilePictureURL(_ message: String) -> String {
+        let components = message.components(separatedBy: " (Sent by ")
+        guard components.count > 1 else { return "" }
+        let urlAndTimestamp = components[0].components(separatedBy: " ")
+        guard urlAndTimestamp.count > 1 else { return "" }
+        return urlAndTimestamp.last ?? ""
     }
 }
 
 struct ProfileImageView: View {
-    let email: String
-    @Binding var profileImages: [String: UIImage]
+    let imageURL: String
+    @State private var image: UIImage?
 
     var body: some View {
         Group {
-            if let image = profileImages[email] {
+            if let image = image {
                 Image(uiImage: image)
                     .resizable()
                     .aspectRatio(contentMode: .fill)
@@ -309,39 +309,61 @@ struct ProfileImageView: View {
                 Circle().fill(Color.gray)
                     .frame(width: 40, height: 40)
                     .onAppear {
-                        fetchProfileImage()
+                        loadImage()
                     }
             }
         }
     }
 
-    private func fetchProfileImage() {
-        guard !email.isEmpty else {
-            print("Email is empty, cannot fetch profile image")
+    private func loadImage() {
+        guard let url = URL(string: imageURL) else {
+            print("Invalid URL for profile image")
             return
         }
         
-        let docRef = Firestore.firestore().collection("users").document(email)
-        
-        docRef.getDocument { document, error in
-            if let error = error {
-                print("Error fetching profile image: \(error.localizedDescription)")
-                return
-            }
-            
-            if let document = document, document.exists,
-               let base64String = document.data()?["image"] as? String,
-               let imageData = Data(base64Encoded: base64String),
-               let image = UIImage(data: imageData) {
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            if let data = data, let loadedImage = UIImage(data: data) {
                 DispatchQueue.main.async {
-                    self.profileImages[email] = image
+                    self.image = loadedImage
                 }
             } else {
-                print("No profile image found for email: \(email). Using default image.")
-                DispatchQueue.main.async {
-                    self.profileImages[email] = UIImage(systemName: "person.circle.fill")
-                }
+                print("Error loading image: \(error?.localizedDescription ?? "Unknown error")")
             }
+        }.resume()
+    }
+}
+
+struct LoginView: View {
+    let signInAction: () -> Void
+    
+    var body: some View {
+        VStack(spacing: 15) {
+            Image("WaffleFull")
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 300, height: 300)
+            
+            Button(action: signInAction) {
+                HStack {
+                    Image("GoogleLogo") // Make sure to add this asset to your project
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 20, height: 20)
+                    
+                    Text("Sign in with Google")
+                        .fontWeight(.medium)
+                        .foregroundColor(.white)
+                        .montserratAlternates(18, weight: .bold)
+                }
+                .padding()
+                .frame(minWidth: 0, maxWidth: .infinity)
+                .background(Color("Accent"))
+                .cornerRadius(800)
+            }
+            .padding(.horizontal, 50)
         }
+        .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity)
+        .background(Color("Background"))
+        .edgesIgnoringSafeArea(.all)
     }
 }

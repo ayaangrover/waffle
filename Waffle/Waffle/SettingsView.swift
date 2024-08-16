@@ -8,7 +8,6 @@ struct SettingsView: View {
     @State private var showingImagePicker = false
     @State private var displayName: String = ""
     @State private var email: String = ""
-    @State private var profileImages: [String: UIImage] = [:]
     @Environment(\.presentationMode) var presentationMode
 
     var body: some View {
@@ -21,11 +20,24 @@ struct SettingsView: View {
             
             Spacer().frame(height: 30)
             
-            ProfileImageView(email: email, profileImages: $profileImages)
-                .frame(width: 150, height: 150)
-                .onTapGesture {
-                    showingImagePicker = true
+            Group {
+                if let imageURL = Auth.auth().currentUser?.photoURL?.absoluteString {
+                    ProfileImageView(imageURL: imageURL)
+                        .frame(width: 150, height: 150)
+                        .onTapGesture {
+                            showingImagePicker = true
+                        }
+                } else {
+                    Image(systemName: "person.circle.fill")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 150, height: 150)
+                        .foregroundColor(.gray)
+                        .onTapGesture {
+                            showingImagePicker = true
+                        }
                 }
+            }
             
             Button("Change Profile Picture") {
                 showingImagePicker = true
@@ -64,17 +76,6 @@ struct SettingsView: View {
         guard let user = Auth.auth().currentUser else { return }
         displayName = user.displayName ?? ""
         email = user.email ?? ""
-        
-        let docRef = Firestore.firestore().collection("users").document(email)
-        docRef.getDocument { document, error in
-            if let document = document, document.exists,
-               let base64String = document.data()?["image"] as? String,
-               let imageData = Data(base64Encoded: base64String),
-               let image = UIImage(data: imageData) {
-                self.profileImages[email] = image
-                self.profileImage = image
-            }
-        }
     }
     
     private func saveProfileImage() {
@@ -89,7 +90,6 @@ struct SettingsView: View {
                 print("Error saving profile image: \(error.localizedDescription)")
             } else {
                 print("Profile image saved successfully")
-                self.profileImages[email] = image
             }
         }
     }
