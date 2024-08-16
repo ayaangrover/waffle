@@ -67,59 +67,107 @@ struct ContentView: View {
                                     let profilePictureURL = messageParts.count > 1 ? messageParts[1] : ""
                                     let senderInfo = messageParts.count > 2 ? messageParts[2] : ""
                                     
+                                    let processedMessage = processMessage(messageContent)
+                                    
                                     let isCurrentUserMessage = isMessageFromCurrentUser(senderInfo)
                                     let shouldShowTimestamp = shouldShowTimestamp(for: index)
                                     let isFirstInGroup = isFirstInGroup(at: index)
                                     let (senderName, timestamp) = extractSenderInfoAndTimestamp(from: senderInfo)
 
-                                    HStack {
-                                        if isCurrentUserMessage {
-                                            Spacer()
-                                            VStack(alignment: .trailing) {
+                                    VStack(spacing: 5) {
+                                        HStack {
+                                            if isCurrentUserMessage {
+                                                Spacer()
+                                                VStack(alignment: .trailing) {
+                                                    HStack {
+                                                        VStack(alignment: .trailing, spacing: 5) {
+                                                            Text(processedMessage.text)
+                                                                .padding(10)
+                                                                .background(Color("Accent"))
+                                                                .foregroundColor(.white)
+                                                                .cornerRadius(20)
+                                                                .frame(maxWidth: 300, alignment: .trailing)
+                                                            
+                                                            if let imageURL = processedMessage.imageURL {
+                                                                AsyncImage(url: imageURL) { phase in
+                                                                    switch phase {
+                                                                    case .empty:
+                                                                        ProgressView()
+                                                                    case .success(let image):
+                                                                        image
+                                                                            .resizable()
+                                                                            .aspectRatio(contentMode: .fit)
+                                                                            .frame(maxWidth: 300, maxHeight: 300)
+                                                                            .cornerRadius(20)
+                                                                    case .failure:
+                                                                        Text("Failed to load image")
+                                                                            .foregroundColor(.red)
+                                                                    @unknown default:
+                                                                        EmptyView()
+                                                                    }
+                                                                }
+                                                                .frame(maxWidth: 300, maxHeight: 300)
+                                                            }
+                                                            
+                                                            if shouldShowTimestamp {
+                                                                Text("\(senderName) • \(timestamp)")
+                                                                    .font(.caption)
+                                                                    .foregroundColor(.gray)
+                                                                    .padding(.trailing, 5)
+                                                            }
+                                                        }
+                                                        if isFirstInGroup {
+                                                            ProfileImageView(imageURL: profilePictureURL)
+                                                        }
+                                                    }
+                                                }
+                                            } else {
                                                 HStack {
-                                                    VStack(alignment: .trailing) {
-                                                        Text(messageContent)
+                                                    if isFirstInGroup {
+                                                        ProfileImageView(imageURL: profilePictureURL)
+                                                    }
+                                                    VStack(alignment: .leading, spacing: 5) {
+                                                        Text(processedMessage.text)
                                                             .padding(10)
-                                                            .background(Color("Accent"))
-                                                            .foregroundColor(.white)
+                                                            .background(Color.gray.opacity(0.2))
                                                             .cornerRadius(20)
-                                                            .frame(maxWidth: 300, alignment: .trailing)
+                                                            .frame(maxWidth: 300, alignment: .leading)
+                                                        
+                                                        if let imageURL = processedMessage.imageURL {
+                                                            AsyncImage(url: imageURL) { phase in
+                                                                switch phase {
+                                                                case .empty:
+                                                                    ProgressView()
+                                                                case .success(let image):
+                                                                    image
+                                                                        .resizable()
+                                                                        .aspectRatio(contentMode: .fit)
+                                                                        .frame(maxWidth: 300, maxHeight: 300)
+                                                                        .cornerRadius(20)
+                                                                case .failure:
+                                                                    Text("Failed to load image")
+                                                                        .foregroundColor(.red)
+                                                                @unknown default:
+                                                                    EmptyView()
+                                                                }
+                                                            }
+                                                            .frame(maxWidth: 300, maxHeight: 300)
+                                                        }
+                                                        
                                                         if shouldShowTimestamp {
                                                             Text("\(senderName) • \(timestamp)")
                                                                 .font(.caption)
                                                                 .foregroundColor(.gray)
-                                                                .padding(.trailing, 5)
+                                                                .padding(.leading, 5)
                                                         }
                                                     }
-                                                    if isFirstInGroup {
-                                                        ProfileImageView(imageURL: profilePictureURL)
-                                                    }
+                                                    Spacer()
                                                 }
-                                            }
-                                        } else {
-                                            HStack {
-                                                if isFirstInGroup {
-                                                    ProfileImageView(imageURL: profilePictureURL)
-                                                }
-                                                VStack(alignment: .leading) {
-                                                    Text(messageContent)
-                                                        .padding(10)
-                                                        .background(Color.gray.opacity(0.2))
-                                                        .cornerRadius(20)
-                                                        .frame(maxWidth: 300, alignment: .leading)
-                                                    if shouldShowTimestamp {
-                                                        Text("\(senderName) • \(timestamp)")
-                                                            .font(.caption)
-                                                            .foregroundColor(.gray)
-                                                            .padding(.leading, 5)
-                                                    }
-                                                }
-                                                Spacer()
                                             }
                                         }
+                                        .padding(.horizontal)
+                                        .padding(.bottom, 2)
                                     }
-                                    .padding(.horizontal)
-                                    .padding(.bottom, 2)
                                     .id(message)
                                 }
                             }
@@ -187,6 +235,41 @@ struct ContentView: View {
         let formattedMessage = "\(trimmedMessage)||\(profilePictureURL)||(Sent by \(user.displayName?.components(separatedBy: " ").first ?? "User") at \(formattedCurrentDateTime()))"
         networkManager.sendMessage(formattedMessage)
         newMessage = ""
+    }
+    
+    func processMessage(_ message: String) -> ProcessedMessage {
+        let cleanedMessage = removeParentheses(from: message)
+        let components = cleanedMessage.components(separatedBy: .whitespacesAndNewlines)
+        var text = ""
+        var imageURL: URL?
+        
+        for component in components {
+            if component.lowercased().hasSuffix(".png") || component.lowercased().hasSuffix(".jpg") || component.lowercased().hasSuffix(".jpeg"),
+               let url = URL(string: component) {
+                imageURL = url
+            } else if !component.isEmpty {
+                text += component + " "
+            }
+        }
+        
+        return ProcessedMessage(text: text.trimmingCharacters(in: .whitespacesAndNewlines), imageURL: imageURL)
+    }
+
+    func removeParentheses(from string: String) -> String {
+        var result = ""
+        var insideParentheses = false
+        
+        for char in string {
+            if char == "(" {
+                insideParentheses = true
+            } else if char == ")" {
+                insideParentheses = false
+            } else if !insideParentheses {
+                result.append(char)
+            }
+        }
+        
+        return result
     }
     
     private func signInWithGoogle() {
@@ -295,6 +378,11 @@ struct ContentView: View {
             return timestamp
         }
         return ""
+    }
+    
+    struct ProcessedMessage {
+        let text: String
+        let imageURL: URL?
     }
     
     private func extractSenderInfoAndTimestamp(from senderInfo: String) -> (String, String) {
