@@ -20,13 +20,13 @@ struct ContentView: View {
                         Spacer().frame(height: 90)
                         
                         HStack {
-                            NavigationLink(destination: SettingsView()) {
-                                Image(systemName: "gearshape")
-                                    .resizable()
-                                    .frame(width: 24, height: 24)
-                                    .foregroundColor(Color("Icons"))
-                            }
-                            .padding(.leading)
+//                            NavigationLink(action: none) {
+//                                Image(systemName: "gearshape")
+//                                    .resizable()
+//                                    .frame(width: 24, height: 24)
+//                                    .foregroundColor(Color("Icons"))
+//                            }
+//                            .padding(.leading)
                             
                             Spacer()
                             
