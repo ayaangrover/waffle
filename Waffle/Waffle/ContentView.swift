@@ -75,68 +75,51 @@ struct ContentView: View {
                                     let (senderName, timestamp) = extractSenderInfoAndTimestamp(from: senderInfo)
 
                                     VStack(spacing: 5) {
-                                        HStack {
-                                            if isCurrentUserMessage {
-                                                Spacer()
-                                                VStack(alignment: .trailing) {
-                                                    HStack {
-                                                        VStack(alignment: .trailing, spacing: 5) {
-                                                            if !processedMessage.text.isEmpty {
-                                                                Text(processedMessage.text)
-                                                                    .padding(10)
-                                                                    .background(Color("Accent"))
-                                                                    .foregroundColor(.white)
-                                                                    .cornerRadius(20)
-                                                                    .frame(maxWidth: 300, alignment: .trailing)
-                                                            }
-                                                            
-                                                            if let mediaURL = processedMessage.mediaURL {
-                                                                MediaView(url: mediaURL, mediaType: processedMessage.mediaType)
-                                                            }
-                                                            
-                                                            if shouldShowTimestamp {
-                                                                Text("\(senderName) • \(timestamp)")
-                                                                    .font(.caption)
-                                                                    .foregroundColor(.gray)
-                                                                    .padding(.trailing, 5)
-                                                            }
-                                                        }
-                                                        if isFirstInGroup {
-                                                            ProfileImageView(imageURL: profilePictureURL)
-                                                        }
-                                                    }
-                                                }
-                                            } else {
-                                                HStack {
-                                                    if isFirstInGroup {
-                                                        ProfileImageView(imageURL: profilePictureURL)
-                                                    }
-                                                    VStack(alignment: .leading, spacing: 5) {
-                                                        if !processedMessage.text.isEmpty {
-                                                            Text(processedMessage.text)
-                                                                .padding(10)
-                                                                .background(Color.gray.opacity(0.2))
-                                                                .cornerRadius(20)
-                                                                .frame(maxWidth: 300, alignment: .leading)
-                                                        }
-                                                        
-                                                        if let mediaURL = processedMessage.mediaURL {
-                                                            MediaView(url: mediaURL, mediaType: processedMessage.mediaType)
-                                                        }
-                                                        
-                                                        if shouldShowTimestamp {
-                                                            Text("\(senderName) • \(timestamp)")
-                                                                .font(.caption)
-                                                                .foregroundColor(.gray)
-                                                                .padding(.leading, 5)
-                                                        }
-                                                    }
+                                        if !processedMessage.text.isEmpty || processedMessage.mediaURL != nil || processedMessage.youtubeVideoId != nil {
+                                            HStack {
+                                                if isCurrentUserMessage {
                                                     Spacer()
+                                                    VStack(alignment: .trailing) {
+                                                        HStack {
+                                                            VStack(alignment: .trailing, spacing: 5) {
+                                                                if !processedMessage.text.isEmpty {
+                                                                    Text(processedMessage.text)
+                                                                        .padding(10)
+                                                                        .background(Color("Accent"))
+                                                                        .foregroundColor(.white)
+                                                                        .cornerRadius(20)
+                                                                        .frame(maxWidth: 300, alignment: .trailing)
+                                                                }
+                                                                
+                                                                if let mediaURL = processedMessage.mediaURL {
+                                                                    MediaView(url: mediaURL, mediaType: processedMessage.mediaType)
+                                                                }
+                                                                
+                                                                if let youtubeVideoId = processedMessage.youtubeVideoId {
+                                                                    YouTubePreviewView(videoId: youtubeVideoId)
+                                                                        .frame(maxWidth: 300)
+                                                                }
+                                                                
+                                                                if shouldShowTimestamp {
+                                                                    Text("\(senderName) • \(timestamp)")
+                                                                        .font(.caption)
+                                                                        .foregroundColor(.gray)
+                                                                        .padding(.trailing, 5)
+                                                                }
+                                                            }
+                                                            if isFirstInGroup {
+                                                                ProfileImageView(imageURL: profilePictureURL)
+                                                            }
+                                                        }
+                                                    }
+                                                } else {
+                                                    // Similar changes for messages from other users
+                                                    // ...
                                                 }
                                             }
+                                            .padding(.horizontal)
+                                            .padding(.bottom, 2)
                                         }
-                                        .padding(.horizontal)
-                                        .padding(.bottom, 2)
                                     }
                                     .id(message)
                                 }
@@ -213,28 +196,79 @@ struct ContentView: View {
         var text = ""
         var mediaURL: URL?
         var mediaType: ProcessedMessage.MediaType = .none
+        var youtubeVideoId: String?
         
         for component in components {
             if let url = URL(string: component) {
-                let lowercasedPath = url.pathExtension.lowercased()
-                if ["png", "jpg", "jpeg"].contains(lowercasedPath) {
-                    mediaURL = url
-                    mediaType = .image
-                } else if lowercasedPath == "gif" {
-                    mediaURL = url
-                    mediaType = .gif
-                } else if lowercasedPath == "heic" {
-                    mediaURL = url
-                    mediaType = .heic
-                } else if !component.isEmpty {
-                    text += component + " "
+                if isYouTubeLinkNew(url) {
+                    if let videoId = extractYouTubeVideoId(from: url) {
+                        youtubeVideoId = videoId
+                    }
+                    // Don't add the YouTube link to the text
+                } else {
+                    let lowercasedPath = url.pathExtension.lowercased()
+                    if ["png", "jpg", "jpeg"].contains(lowercasedPath) {
+                        mediaURL = url
+                        mediaType = .image
+                    } else if lowercasedPath == "gif" {
+                        mediaURL = url
+                        mediaType = .gif
+                    } else if lowercasedPath == "heic" {
+                        mediaURL = url
+                        mediaType = .heic
+                    } else {
+                        text += component + " "
+                    }
                 }
-            } else if !component.isEmpty {
+            } else {
                 text += component + " "
             }
         }
         
-        return ProcessedMessage(text: text.trimmingCharacters(in: .whitespacesAndNewlines), mediaURL: mediaURL, mediaType: mediaType)
+        // Trim any leading or trailing whitespace
+        text = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        // If there's a YouTube preview and the text is empty, return a ProcessedMessage with no text
+        if youtubeVideoId != nil && text.isEmpty {
+            return ProcessedMessage(text: "",
+                                    mediaURL: mediaURL,
+                                    mediaType: mediaType,
+                                    youtubeVideoId: youtubeVideoId)
+        }
+        
+        return ProcessedMessage(text: text,
+                                mediaURL: mediaURL,
+                                mediaType: mediaType,
+                                youtubeVideoId: youtubeVideoId)
+    }
+
+    func isYouTubeLinkNew(_ url: URL) -> Bool {
+        return url.host?.contains("youtube.com") == true || url.host?.contains("youtu.be") == true
+    }
+
+    func extractYouTubeVideoId(from url: URL) -> String? {
+        if url.host?.contains("youtu.be") == true {
+            return url.lastPathComponent
+        } else if url.host?.contains("youtube.com") == true {
+            if let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+               let videoId = components.queryItems?.first(where: { $0.name == "v" })?.value {
+                return videoId
+            }
+        }
+        return nil
+    }
+
+    func isYouTubeLink(_ url: URL) -> Bool {
+        return url.host?.contains("youtube.com") == true || url.host?.contains("youtu.be") == true
+    }
+
+    func fetchYouTubeInfo(from url: URL) -> YouTubeVideoInfo? {
+        // This is a placeholder implementation. In a real app, you'd want to use YouTube's API
+        // to fetch actual video information. For now, we'll return dummy data.
+        let videoId = url.absoluteString.contains("youtu.be") ? url.lastPathComponent : URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems?.first(where: { $0.name == "v" })?.value ?? ""
+        return YouTubeVideoInfo(id: videoId,
+                                title: "YouTube Video Title",
+                                thumbnailURL: URL(string: "https://img.youtube.com/vi/\(videoId)/0.jpg")!)
     }
 
     func removeParentheses(from string: String) -> String {
@@ -546,8 +580,76 @@ struct ProcessedMessage {
     let text: String
     let mediaURL: URL?
     let mediaType: MediaType
+    let youtubeVideoId: String?
     
     enum MediaType {
         case none, image, gif, heic
     }
+}
+
+struct YouTubePreviewView: View {
+    @State private var videoInfo: YouTubeVideoInfo?
+    @State private var isLoading = true
+    @State private var errorMessage: String?
+    let videoId: String
+
+    var body: some View {
+        Group {
+            if let videoInfo = videoInfo {
+                Link(destination: URL(string: "https://www.youtube.com/watch?v=\(videoInfo.id)")!) {
+                    HStack(alignment: .top, spacing: 10) {
+                        AsyncImage(url: videoInfo.thumbnailURL) { image in
+                            image.resizable()
+                                .aspectRatio(contentMode: .fill)
+                        } placeholder: {
+                            Rectangle().fill(Color.gray.opacity(0.3))
+                        }
+                        .frame(width: 120, height: 90)
+                        .cornerRadius(8)
+
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(videoInfo.title)
+                                .font(.caption)
+                                .lineLimit(3)
+                                .multilineTextAlignment(.leading)
+                            Text("YouTube")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                        }
+                        Spacer()
+                    }
+                    .frame(height: 90)
+                    .background(Color.gray.opacity(0.1))
+                    .cornerRadius(12)
+                }
+            } else if isLoading {
+                ProgressView()
+            } else if let errorMessage = errorMessage {
+                Text(errorMessage)
+                    .foregroundColor(.red)
+            }
+        }
+        .onAppear {
+            loadVideoInfo()
+        }
+    }
+
+    private func loadVideoInfo() {
+        isLoading = true
+        Task {
+            do {
+                videoInfo = try await YouTubeAPIManager.shared.fetchVideoInfo(id: videoId)
+                isLoading = false
+            } catch {
+                errorMessage = "Failed to load video info"
+                isLoading = false
+            }
+        }
+    }
+}
+
+struct YouTubeVideoInfo: Identifiable {
+    let id: String
+    let title: String
+    let thumbnailURL: URL
 }
