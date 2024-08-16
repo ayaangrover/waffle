@@ -13,6 +13,8 @@
 			</array>
 		</dict>
 	</array>
+	<key>GIDClientID</key>
+	<string>879874158618-u87t5pk9bdg1iijo0qbi1cmbj39h5s4t.apps.googleusercontent.com</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>MontserratAlternates-Black.ttf</string>
@@ -33,8 +35,24 @@
 		<string>MontserratAlternates-Italic.ttf</string>
 		<string>MontserratAlternates-LightItalic.ttf</string>
 		<string>MontserratAlternates-ExtraLight.ttf</string>
+		<string>Montserrat-Black.ttf</string>
+		<string>Montserrat-BlackItalic.ttf</string>
+		<string>Montserrat-Bold.ttf</string>
+		<string>Montserrat-BoldItalic.ttf</string>
+		<string>Montserrat-ExtraBold.ttf</string>
+		<string>Montserrat-ExtraBoldItalic.ttf</string>
+		<string>Montserrat-ExtraLight.ttf</string>
+		<string>Montserrat-ExtraLightItalic.ttf</string>
+		<string>Montserrat-Italic.ttf</string>
+		<string>Montserrat-Light.ttf</string>
+		<string>Montserrat-LightItalic.ttf</string>
+		<string>Montserrat-Medium.ttf</string>
+		<string>Montserrat-MediumItalic.ttf</string>
+		<string>Montserrat-Regular.ttf</string>
+		<string>Montserrat-SemiBold.ttf</string>
+		<string>Montserrat-SemiBoldItalic.ttf</string>
+		<string>Montserrat-Thin.ttf</string>
+		<string>Montserrat-ThinItalic.ttf</string>
 	</array>
-	<key>GIDClientID</key>
-	<string>879874158618-u87t5pk9bdg1iijo0qbi1cmbj39h5s4t.apps.googleusercontent.com</string>
 </dict>
 </plist>
