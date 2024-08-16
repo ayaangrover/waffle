@@ -139,13 +139,13 @@ struct ContentView: View {
                             .textFieldStyle(RoundedBorderTextFieldStyle())
                             .padding()
                             .background(Color(UIColor.systemBackground))
-                            .frame(width:100, height:24)
+                            .frame(width:300, height:24)
                             .cornerRadius(15)
                         
                         Button(action: sendMessage) {
                             Image(systemName: "paperplane.fill")
                                 .resizable()
-                                .frame(width: 12, height: 12)
+                                .frame(width: 18, height: 18)
                                 .foregroundColor(.white)
                                 .padding()
                                 .background(Color("Accent"))
@@ -298,14 +298,13 @@ struct ContentView: View {
     }
     
     private func extractSenderInfoAndTimestamp(from senderInfo: String) -> (String, String) {
-        let components = senderInfo.components(separatedBy: "at ")
+        // Remove leading and trailing parentheses from the entire string
+        let cleanedInfo = senderInfo.trimmingCharacters(in: CharacterSet(charactersIn: "()"))
+        
+        let components = cleanedInfo.components(separatedBy: "at ")
         if components.count > 1 {
             let senderName = components[0].replacingOccurrences(of: "Sent by ", with: "").trimmingCharacters(in: .whitespaces)
-            var timestamp = components[1].trimmingCharacters(in: .whitespaces)
-            // Remove the trailing parenthesis
-            if timestamp.hasSuffix(")") {
-                timestamp = String(timestamp.dropLast())
-            }
+            let timestamp = components[1].trimmingCharacters(in: .whitespaces)
             return (senderName, timestamp)
         }
         return ("", "")
