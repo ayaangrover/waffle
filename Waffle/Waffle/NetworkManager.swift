@@ -1,7 +1,6 @@
 import Foundation
 import Combine
 import SwiftUI
-
 import FirebaseAuth
 
 struct UserData: Identifiable, Codable {
@@ -112,12 +111,28 @@ class NetworkManager: ObservableObject {
     }
     
     func fetchUsers() {
-            guard let url = URL(string: adminBaseURL + "users") else {
-                print("Invalid URL for fetching users")
+        guard let url = URL(string: adminBaseURL + "users") else {
+            print("Invalid URL for fetching users")
+            return
+        }
+        
+        getFirebaseIdToken { [weak self] (idToken, error) in
+            guard let self = self else { return }
+            
+            if let error = error {
+                print("Error getting Firebase ID token: \(error)")
                 return
             }
             
-            let task = URLSession.shared.dataTask(with: url) { data, response, error in
+            guard let idToken = idToken else {
+                print("No ID token received")
+                return
+            }
+            
+            var request = URLRequest(url: url)
+            request.setValue("Bearer \(idToken)", forHTTPHeaderField: "Authorization")
+            
+            let task = URLSession.shared.dataTask(with: request) { data, response, error in
                 if let error = error {
                     print("Error fetching users: \(error)")
                     return
@@ -138,5 +153,27 @@ class NetworkManager: ObservableObject {
                 }
             }
             task.resume()
+        }
+    }
+    
+    func getFirebaseIdToken(completion: @escaping (String?, Error?) -> Void) {
+            guard let currentUser = Auth.auth().currentUser else {
+                completion(nil, NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "No user logged in"]))
+                return
+            }
+            
+            currentUser.getIDTokenForcingRefresh(true) { idToken, error in
+                if let error = error {
+                    completion(nil, error)
+                    return
+                }
+                
+                guard let token = idToken else {
+                    completion(nil, NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to get ID token"]))
+                    return
+                }
+                
+                completion(token, nil)
+            }
         }
 }

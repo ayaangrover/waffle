@@ -9,7 +9,7 @@ struct WaffleApp: App {
     
     var body: some Scene {
         WindowGroup {
-            UserView()
+            ContentView()
                 .modifier(MontserratAlternatesFont(size: 16, weight: .regular))
         }
     }
