@@ -11,6 +11,8 @@ struct ContentView: View {
     @State private var isSignedIn = false
     @StateObject private var networkManager = NetworkManager()
     @State private var newMessage = ""
+    @State private var showUserView = false
+
     
     var body: some View {
         VStack(spacing: 0) {
@@ -20,8 +22,8 @@ struct ContentView: View {
                         Spacer().frame(height: 90)
                         
                         HStack {
-                            NavigationLink(destination: UserView()) {
-                                Image(systemName: "person.outline")
+                            NavigationLink(destination: Waffle.UserView(), isActive: $showUserView) {
+                                Image(systemName: "person")
                                     .resizable()
                                     .frame(width: 24, height: 24)
                                     .foregroundColor(Color("Icons"))
@@ -70,53 +72,42 @@ struct ContentView: View {
                                     let processedMessage = processMessage(messageContent)
                                     
                                     let isCurrentUserMessage = isMessageFromCurrentUser(senderInfo)
-                                    let shouldShowTimestamp = shouldShowTimestamp(for: index)
                                     let isFirstInGroup = isFirstInGroup(at: index)
+                                    let isLastInGroup = isLastInGroup(at: index)
                                     let (senderName, timestamp) = extractSenderInfoAndTimestamp(from: senderInfo)
-
-                                    print("Displaying message")
-
+                                    
                                     VStack(spacing: 5) {
                                         if !processedMessage.text.isEmpty || processedMessage.mediaURL != nil || processedMessage.youtubeVideoId != nil {
-                                            HStack {
-                                                if isCurrentUserMessage {
-                                                    Spacer()
-                                                    VStack(alignment: .trailing) {
-                                                        HStack {
-                                                            VStack(alignment: .trailing, spacing: 5) {
-                                                                if !processedMessage.text.isEmpty {
-                                                                    Text(processedMessage.text)
-                                                                        .padding(10)
-                                                                        .background(Color("Accent"))
-                                                                        .foregroundColor(.white)
-                                                                        .cornerRadius(20)
-                                                                        .frame(maxWidth: 300, alignment: .trailing)
-                                                                }
-                                                                
-                                                                if let mediaURL = processedMessage.mediaURL {
-                                                                    MediaView(url: mediaURL, mediaType: processedMessage.mediaType)
-                                                                }
-                                                                
-                                                                if let youtubeVideoId = processedMessage.youtubeVideoId {
-                                                                    YouTubePreviewView(videoId: youtubeVideoId)
-                                                                        .frame(maxWidth: 300)
-                                                                }
-                                                                
-                                                                if shouldShowTimestamp {
-                                                                    Text("\(senderName) • \(timestamp)")
-                                                                        .font(.caption)
-                                                                        .foregroundColor(.gray)
-                                                                        .padding(.trailing, 5)
-                                                                }
-                                                            }
-                                                            if isFirstInGroup {
-                                                                ProfileImageView(imageURL: profilePictureURL)
-                                                            }
-                                                        }
+                                            HStack(alignment: .top) {
+                                                if !isCurrentUserMessage {
+                                                    if isFirstInGroup {
+                                                        ProfileImageView(imageURL: profilePictureURL)
+                                                    } else {
+                                                        Spacer().frame(width: 40)
                                                     }
-                                                } else {
-                                                    // Similar changes for messages from other users
-                                                    // ...
+                                                }
+                                                
+                                                VStack(alignment: isCurrentUserMessage ? .trailing : .leading) {
+                                                    MessageContentView(
+                                                        processedMessage: processedMessage,
+                                                        senderName: senderName,
+                                                        timestamp: timestamp,
+                                                        isCurrentUser: isCurrentUserMessage
+                                                    )
+                                                    
+                                                    if isLastInGroup {
+                                                        Text("\(senderName) • \(timestamp)")
+                                                            .font(.caption)
+                                                            .foregroundColor(.gray)
+                                                    }
+                                                }
+                                                
+                                                if isCurrentUserMessage {
+                                                    if isFirstInGroup {
+                                                        ProfileImageView(imageURL: profilePictureURL)
+                                                    } else {
+                                                        Spacer().frame(width: 40)
+                                                    }
                                                 }
                                             }
                                             .padding(.horizontal)
@@ -126,6 +117,8 @@ struct ContentView: View {
                                     .id(message)
                                 }
                             }
+
+                            
                             .padding(.bottom, 10)
                             .onChange(of: networkManager.messages) { _ in
                                 if let lastMessage = networkManager.messages.last {
@@ -418,7 +411,16 @@ struct ContentView: View {
         let currentMessage = networkManager.messages[index].components(separatedBy: "||")
         let previousSenderInfo = previousMessage.count > 2 ? previousMessage[2] : ""
         let currentSenderInfo = currentMessage.count > 2 ? currentMessage[2] : ""
-        return isMessageFromCurrentUser(previousSenderInfo) != isMessageFromCurrentUser(currentSenderInfo)
+        return extractSenderName(from: previousSenderInfo) != extractSenderName(from: currentSenderInfo)
+    }
+
+    private func extractSenderName(from senderInfo: String) -> String {
+        let components = senderInfo.components(separatedBy: "Sent by ")
+        if components.count > 1 {
+            let nameAndTimestamp = components[1].components(separatedBy: " at ")
+            return nameAndTimestamp[0]
+        }
+        return ""
     }
     
     private func extractProfilePictureURL(_ message: String) -> String {
@@ -427,6 +429,15 @@ struct ContentView: View {
         let urlAndTimestamp = components[0].components(separatedBy: " ")
         guard urlAndTimestamp.count > 1 else { return "" }
         return urlAndTimestamp.last ?? ""
+    }
+    
+    private func isLastInGroup(at index: Int) -> Bool {
+        if index == networkManager.messages.count - 1 { return true }
+        let currentMessage = networkManager.messages[index].components(separatedBy: "||")
+        let nextMessage = networkManager.messages[index + 1].components(separatedBy: "||")
+        let currentSenderInfo = currentMessage.count > 2 ? currentMessage[2] : ""
+        let nextSenderInfo = nextMessage.count > 2 ? nextMessage[2] : ""
+        return extractSenderName(from: currentSenderInfo) != extractSenderName(from: nextSenderInfo)
     }
 }
 
@@ -655,4 +666,33 @@ struct YouTubeVideoInfo: Identifiable {
     let id: String
     let title: String
     let thumbnailURL: URL
+}
+
+struct MessageContentView: View {
+    let processedMessage: ProcessedMessage
+    let senderName: String
+    let timestamp: String
+    let isCurrentUser: Bool
+    
+    var body: some View {
+        VStack(alignment: isCurrentUser ? .trailing : .leading, spacing: 5) {
+            if !processedMessage.text.isEmpty {
+                Text(processedMessage.text)
+                    .padding(10)
+                    .background(isCurrentUser ? Color("Accent") : Color.gray.opacity(0.2))
+                    .foregroundColor(isCurrentUser ? .white : .primary)
+                    .cornerRadius(20)
+                    .frame(maxWidth: 300, alignment: isCurrentUser ? .trailing : .leading)
+            }
+            
+            if let mediaURL = processedMessage.mediaURL {
+                MediaView(url: mediaURL, mediaType: processedMessage.mediaType)
+            }
+            
+            if let youtubeVideoId = processedMessage.youtubeVideoId {
+                YouTubePreviewView(videoId: youtubeVideoId)
+                    .frame(maxWidth: 300)
+            }
+        }
+    }
 }

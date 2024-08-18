@@ -1,9 +1,9 @@
 import SwiftUI
 
-struct UserView: View {
+public struct UserView: View {
     @StateObject private var networkManager = NetworkManager()
     
-    var body: some View {
+    public var body: some View {
         NavigationView {
             List(networkManager.users) { user in
                 HStack(spacing: 15) {
