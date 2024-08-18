@@ -55,6 +55,7 @@
 		3A40051D2C6EDAAD0059E3B1 /* MontserratAlternates-ThinItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 3A4005092C6EDAAD0059E3B1 /* MontserratAlternates-ThinItalic.ttf */; };
 		3A40051E2C6EDAAD0059E3B1 /* OFL.txt in Resources */ = {isa = PBXBuildFile; fileRef = 3A40050A2C6EDAAD0059E3B1 /* OFL.txt */; };
 		3A4005202C6EDC480059E3B1 /* FontModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A40051F2C6EDC470059E3B1 /* FontModifier.swift */; };
+		3A53E8252C72839D00C2BFC8 /* UserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A53E8242C72839D00C2BFC8 /* UserView.swift */; };
 		3A5EEF2C2C5F187900DD8690 /* WaffleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A5EEF2B2C5F187900DD8690 /* WaffleApp.swift */; };
 		3A5EEF2E2C5F187900DD8690 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A5EEF2D2C5F187900DD8690 /* ContentView.swift */; };
 		3A5EEF302C5F187B00DD8690 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3A5EEF2F2C5F187B00DD8690 /* Assets.xcassets */; };
@@ -91,6 +92,7 @@
 		3A4005092C6EDAAD0059E3B1 /* MontserratAlternates-ThinItalic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "MontserratAlternates-ThinItalic.ttf"; sourceTree = "<group>"; };
 		3A40050A2C6EDAAD0059E3B1 /* OFL.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = OFL.txt; sourceTree = "<group>"; };
 		3A40051F2C6EDC470059E3B1 /* FontModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FontModifier.swift; sourceTree = "<group>"; };
+		3A53E8242C72839D00C2BFC8 /* UserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserView.swift; sourceTree = "<group>"; };
 		3A5EEF2B2C5F187900DD8690 /* WaffleApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaffleApp.swift; sourceTree = "<group>"; };
 		3A5EEF2D2C5F187900DD8690 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		3A5EEF2F2C5F187B00DD8690 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -185,6 +187,7 @@
 				3A36241B2C6FB7BD00B78112 /* SettingsView.swift */,
 				3AD6A5D02C61A12C0037F09F /* AppDelegate.swift */,
 				3A5EEF2D2C5F187900DD8690 /* ContentView.swift */,
+				3A53E8242C72839D00C2BFC8 /* UserView.swift */,
 				3A36241F2C6FBA0400B78112 /* YouTubeAPIManager.swift */,
 				3A40051F2C6EDC470059E3B1 /* FontModifier.swift */,
 				3AA96B232C654DE400204823 /* NetworkManager.swift */,
@@ -334,6 +337,7 @@
 				3A4005202C6EDC480059E3B1 /* FontModifier.swift in Sources */,
 				3A266BDE2C685B41006617F0 /* ImagePicker.swift in Sources */,
 				3A5EEF2E2C5F187900DD8690 /* ContentView.swift in Sources */,
+				3A53E8252C72839D00C2BFC8 /* UserView.swift in Sources */,
 				3A3624202C6FBA0400B78112 /* YouTubeAPIManager.swift in Sources */,
 				3A5EEF2C2C5F187900DD8690 /* WaffleApp.swift in Sources */,
 			);
@@ -467,10 +471,11 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Waffle/Preview Content\"";
-				DEVELOPMENT_TEAM = 9647R7RL9Q;
+				DEVELOPMENT_TEAM = P6PV2R9443;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Waffle/Info.plist;
@@ -487,6 +492,7 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.ayaangrover.Waffle;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -499,10 +505,11 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Waffle/Preview Content\"";
-				DEVELOPMENT_TEAM = 9647R7RL9Q;
+				DEVELOPMENT_TEAM = P6PV2R9443;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Waffle/Info.plist;
@@ -519,6 +526,7 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.ayaangrover.Waffle;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";

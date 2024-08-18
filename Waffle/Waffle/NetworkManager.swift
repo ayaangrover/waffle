@@ -2,9 +2,21 @@ import Foundation
 import Combine
 import SwiftUI
 
+import FirebaseAuth
+
+struct UserData: Identifiable, Codable {
+    let id: String
+    let name: String
+    let email: String
+    let profileImageURL: String
+}
+
 class NetworkManager: ObservableObject {
     @Published var messages: [String] = []
+    @Published var users: [UserData] = []
     private let baseURL = "https://waffle.ayaangrover.hackclub.app/"
+    private let adminBaseURL = "https://waffle-admin.ayaangrover.hackclub.app/"
+
 
     func fetchMessages() {
         guard let url = URL(string: baseURL) else {
@@ -12,13 +24,14 @@ class NetworkManager: ObservableObject {
             return
         }
         
-        let task = URLSession.shared.dataTask(with: url) { data, response, error in
+        let task = URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
+            guard let self = self else { return }
+            
             if let error = error {
                 print("Error fetching messages: \(error)")
                 return
             }
             
-            // Debugging
             guard let data = data else {
                 print("No data received")
                 return
@@ -26,25 +39,25 @@ class NetworkManager: ObservableObject {
             
             do {
                 let fetchedMessages = try JSONDecoder().decode([String].self, from: data)
-                        let processedMessages = fetchedMessages.compactMap { message -> String? in
-                            print("Processing message: \(message)")
-                            // Remove any spaces that might have been added
-                            let cleanedMessage = message.replacingOccurrences(of: " ", with: "")
-                            if EncryptionManager.isEncrypted(cleanedMessage) {
-                                if let decryptedMessage = EncryptionManager.decrypt(cleanedMessage) {
-                                    print("Successfully decrypted: \(decryptedMessage)")
-                                    return decryptedMessage
-                                } else {
-                                    print("Failed to decrypt message: \(cleanedMessage)")
-                                    return "This message uses a different message encryption. Tell this user to update their app!"
-                                }
-                            } else {
-                                return message
-                            }
+                let processedMessages = fetchedMessages.compactMap { message -> String? in
+                    print("Processing message: \(message)")
+                    let cleanedMessage = message.replacingOccurrences(of: " ", with: "")
+                    if EncryptionManager.isEncrypted(cleanedMessage) {
+                        if let decryptedMessage = EncryptionManager.decrypt(cleanedMessage) {
+                            print("Successfully decrypted: \(decryptedMessage)")
+                            return decryptedMessage
+                        } else {
+                            print("Failed to decrypt message: \(cleanedMessage)")
+                            return "This message uses a different message encryption. Tell this user to update their app!"
                         }
-                        DispatchQueue.main.async {
-                            self.messages = processedMessages
-                        }
+                    } else {
+                        return message
+                    }
+                }
+                DispatchQueue.main.async {
+                    self.messages = processedMessages
+                    print("Updated messages: \(self.messages)")
+                }
             } catch {
                 print("Error decoding messages: \(error)")
             }
@@ -97,4 +110,33 @@ class NetworkManager: ObservableObject {
         }
         task.resume()
     }
+    
+    func fetchUsers() {
+            guard let url = URL(string: adminBaseURL + "users") else {
+                print("Invalid URL for fetching users")
+                return
+            }
+            
+            let task = URLSession.shared.dataTask(with: url) { data, response, error in
+                if let error = error {
+                    print("Error fetching users: \(error)")
+                    return
+                }
+                
+                guard let data = data else {
+                    print("No data received when fetching users")
+                    return
+                }
+                
+                do {
+                    let fetchedUsers = try JSONDecoder().decode([UserData].self, from: data)
+                    DispatchQueue.main.async {
+                        self.users = fetchedUsers
+                    }
+                } catch {
+                    print("Error decoding users: \(error)")
+                }
+            }
+            task.resume()
+        }
 }

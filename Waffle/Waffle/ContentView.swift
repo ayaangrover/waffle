@@ -20,13 +20,13 @@ struct ContentView: View {
                         Spacer().frame(height: 90)
                         
                         HStack {
-//                            NavigationLink(action: none) {
-//                                Image(systemName: "gearshape")
-//                                    .resizable()
-//                                    .frame(width: 24, height: 24)
-//                                    .foregroundColor(Color("Icons"))
-//                            }
-//                            .padding(.leading)
+                            NavigationLink(destination: UserView()) {
+                                Image(systemName: "person.outline")
+                                    .resizable()
+                                    .frame(width: 24, height: 24)
+                                    .foregroundColor(Color("Icons"))
+                            }
+                            .padding(.leading)
                             
                             Spacer()
                             
@@ -73,6 +73,8 @@ struct ContentView: View {
                                     let shouldShowTimestamp = shouldShowTimestamp(for: index)
                                     let isFirstInGroup = isFirstInGroup(at: index)
                                     let (senderName, timestamp) = extractSenderInfoAndTimestamp(from: senderInfo)
+
+                                    print("Displaying message")
 
                                     VStack(spacing: 5) {
                                         if !processedMessage.text.isEmpty || processedMessage.mediaURL != nil || processedMessage.youtubeVideoId != nil {
@@ -164,6 +166,7 @@ struct ContentView: View {
         }
         .onAppear {
             if let currentUser = Auth.auth().currentUser {
+                print("Logged in, fetching messages...")
                 self.user = currentUser
                 self.isSignedIn = true
                 networkManager.fetchMessages()
