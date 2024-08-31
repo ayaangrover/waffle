@@ -17,6 +17,8 @@ public struct Message: Identifiable, Codable, Equatable {
     public let roomID: String
     public let timestamp: Date
     public let profilePictureURL: String?
+    public var isFirstInGroup: Bool = false
+    public var isLastInGroup: Bool = false
     
     enum CodingKeys: String, CodingKey {
         case id, content, senderID, roomID, timestamp, profilePictureURL
@@ -31,16 +33,6 @@ public struct Message: Identifiable, Codable, Equatable {
         self.profilePictureURL = profilePictureURL
     }
     
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        id = try container.decode(String.self, forKey: .id)
-        content = try container.decode(String.self, forKey: .content)
-        senderID = try container.decode(String.self, forKey: .senderID)
-        roomID = try container.decode(String.self, forKey: .roomID)
-        timestamp = try container.decode(Date.self, forKey: .timestamp)
-        profilePictureURL = try container.decodeIfPresent(String.self, forKey: .profilePictureURL)
-    }
-    
     public static func == (lhs: Message, rhs: Message) -> Bool {
         return lhs.id == rhs.id &&
                lhs.content == rhs.content &&
@@ -53,9 +45,9 @@ public struct Message: Identifiable, Codable, Equatable {
 
 public class NetworkManager: ObservableObject {
     @Published var messages: [String: [Message]] = [:]
-    @Published var users: [UserData] = []
-    @Published var rooms: [String] = ["general"]
-    @Published var currentRoomID: String = "general"
+    @Published var users: [String: UserData] = [:]
+    @Published var rooms: [String] = ["General"]
+    @Published var currentRoomID: String = "General"
     private let baseURL = "https://waffle.ayaangrover.hackclub.app/"
 
     init() {
@@ -87,21 +79,56 @@ public class NetworkManager: ObservableObject {
                     let cleanedContent = message.content.replacingOccurrences(of: " ", with: "")
                     if EncryptionManager.isEncrypted(cleanedContent) {
                         if let decryptedContent = EncryptionManager.decrypt(cleanedContent) {
-                            return Message(id: message.id, content: decryptedContent, senderID: message.senderID, roomID: message.roomID, timestamp: message.timestamp, profilePictureURL: message.profilePictureURL)
+                            return Message(id: message.id,
+                                           content: decryptedContent,
+                                           senderID: message.senderID,
+                                           roomID: message.roomID,
+                                           timestamp: message.timestamp,
+                                           profilePictureURL: message.profilePictureURL)
                         } else {
-                            return Message(id: message.id, content: "This message uses a different encryption. Tell this user to update their app!", senderID: message.senderID, roomID: message.roomID, timestamp: message.timestamp, profilePictureURL: message.profilePictureURL)
+                            return Message(id: message.id,
+                                           content: "This message uses a different encryption. Tell this user to update their app!",
+                                           senderID: message.senderID,
+                                           roomID: message.roomID,
+                                           timestamp: message.timestamp,
+                                           profilePictureURL: message.profilePictureURL)
                         }
                     } else {
                         return message
                     }
                 }
+                let groupedMessages = self.groupMessages(processedMessages)
                 DispatchQueue.main.async {
-                    self.messages[roomID] = processedMessages
+                    self.messages[roomID] = groupedMessages
                 }
             } catch {
                 print("Error decoding messages: \(error)")
             }
         }.resume()
+    }
+    
+    func groupMessages(_ messages: [Message]) -> [Message] {
+        var groupedMessages: [Message] = []
+        var currentSenderID: String?
+        
+        for (index, message) in messages.enumerated() {
+            var updatedMessage = message
+            
+            if message.senderID != currentSenderID {
+                // This is the first message in a new group
+                updatedMessage.isFirstInGroup = true
+                currentSenderID = message.senderID
+            }
+            
+            if index == messages.count - 1 || messages[index + 1].senderID != currentSenderID {
+                // This is the last message in the current group
+                updatedMessage.isLastInGroup = true
+            }
+            
+            groupedMessages.append(updatedMessage)
+        }
+        
+        return groupedMessages
     }
     
     func sendMessage(_ content: String, to roomID: String) {
@@ -126,7 +153,7 @@ public class NetworkManager: ObservableObject {
                               senderID: currentUser.uid,
                               roomID: roomID,
                               timestamp: Date(),
-                              profilePictureURL: currentUser.photoURL?.absoluteString ?? "")
+                              profilePictureURL: currentUser.photoURL?.absoluteString)
         
         do {
             let jsonData = try JSONEncoder().encode(message)
@@ -234,6 +261,39 @@ public class NetworkManager: ObservableObject {
                 } else {
                     self?.messages = [:]
                 }
+            }
+        }.resume()
+    }
+    
+    func fetchUserData(for userID: String, completion: @escaping (UserData?) -> Void) {
+        guard let url = URL(string: "\(baseURL)user/\(userID)") else {
+            print("Invalid URL for fetching user data")
+            completion(nil)
+            return
+        }
+        
+        URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
+            if let error = error {
+                print("Error fetching user data: \(error)")
+                completion(nil)
+                return
+            }
+            
+            guard let data = data else {
+                print("No user data received")
+                completion(nil)
+                return
+            }
+            
+            do {
+                let userData = try JSONDecoder().decode(UserData.self, from: data)
+                DispatchQueue.main.async {
+                    self?.users[userID] = userData
+                    completion(userData)
+                }
+            } catch {
+                print("Error decoding user data: \(error)")
+                completion(nil)
             }
         }.resume()
     }

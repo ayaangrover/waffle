@@ -5,7 +5,6 @@ import FirebaseFirestore
 import FirebaseAuth
 import GoogleSignIn
 
-
 struct ContentView: View {
     @State private var profileImages: [String: UIImage] = [:]
     @State private var user: User?
@@ -73,9 +72,11 @@ struct ContentView: View {
                                         if !processedMessage.text.isEmpty || processedMessage.mediaURL != nil || processedMessage.youtubeVideoId != nil {
                                             HStack(alignment: .top) {
                                                 if !isCurrentUserMessage {
-                                                    ProfileImageView(imageURL: message.profilePictureURL)
+                                                    ProfileImageView(imageURL: message.profilePictureURL!)
                                                 }
-                                                
+                                                if isCurrentUserMessage {
+                                                    Spacer()
+                                                }
                                                 VStack(alignment: isCurrentUserMessage ? .trailing : .leading) {
                                                     MessageContentView(
                                                         processedMessage: processedMessage,
@@ -84,13 +85,16 @@ struct ContentView: View {
                                                         isCurrentUser: isCurrentUserMessage
                                                     )
                                                     
-                                                    Text("\(message.senderID) • \(formatTimestamp(message.timestamp))")
+                                                    Text("\(formatTimestamp(message.timestamp))")
                                                         .font(.caption)
-                                                        .foregroundColor(.gray)
+                                                        .foregroundColor((Color("Grey")))
+                                                }
+                                                if !isCurrentUserMessage {
+                                                    Spacer()
                                                 }
                                                 
                                                 if isCurrentUserMessage {
-                                                    ProfileImageView(imageURL: message.profilePictureURL)
+                                                    ProfileImageView(imageURL: message.profilePictureURL!)
                                                 }
                                             }
                                             .padding(.horizontal)
@@ -383,7 +387,7 @@ struct ProfileImageView: View {
                     .clipShape(Circle())
                     .frame(width: 40, height: 40)
             } else {
-                Circle().fill(Color.gray)
+                Circle().fill(Color("Grey"))
                     .frame(width: 40, height: 40)
                     .onAppear {
                         loadImage()
@@ -422,7 +426,7 @@ struct LoginView: View {
             
             Button(action: signInAction) {
                 HStack {
-                    Image("GoogleLogo") // Make sure to add this asset to your project
+                    Image("GoogleLogo")
                         .resizable()
                         .aspectRatio(contentMode: .fit)
                         .frame(width: 20, height: 20)
@@ -545,7 +549,7 @@ struct YouTubePreviewView: View {
                             image.resizable()
                                 .aspectRatio(contentMode: .fill)
                         } placeholder: {
-                            Rectangle().fill(Color.gray.opacity(0.3))
+                            Rectangle().fill(Color("Accent").opacity(0.3))
                         }
                         .frame(width: 120, height: 90)
                         .cornerRadius(8)
@@ -562,7 +566,7 @@ struct YouTubePreviewView: View {
                         Spacer()
                     }
                     .frame(height: 90)
-                    .background(Color.gray.opacity(0.1))
+                    .background(Color("Accent").opacity(0.1))
                     .cornerRadius(12)
                 }
             } else if isLoading {
@@ -608,9 +612,9 @@ struct MessageContentView: View {
             if !processedMessage.text.isEmpty {
                 Text(processedMessage.text)
                     .padding(10)
-                    .background(isCurrentUser ? Color.blue : Color.gray)
+                    .background(isCurrentUser ? Color("Accent") : Color("Grey"))
                     .foregroundColor(.white)
-                    .cornerRadius(10)
+                    .cornerRadius(50)
             }
             
             if let mediaURL = processedMessage.mediaURL {
