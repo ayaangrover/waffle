@@ -5,6 +5,7 @@ import FirebaseFirestore
 import FirebaseAuth
 import GoogleSignIn
 
+
 struct ContentView: View {
     @State private var profileImages: [String: UIImage] = [:]
     @State private var user: User?
@@ -12,8 +13,9 @@ struct ContentView: View {
     @StateObject private var networkManager = NetworkManager()
     @State private var newMessage = ""
     @State private var showUserView = false
+    @State private var showRoomCreationView = false
+    @State private var newRoomName = ""
 
-    
     var body: some View {
         VStack(spacing: 0) {
             if isSignedIn {
@@ -22,7 +24,7 @@ struct ContentView: View {
                         Spacer().frame(height: 90)
                         
                         HStack {
-                            NavigationLink(destination: Waffle.UserView(), isActive: $showUserView) {
+                            NavigationLink(destination: UserView(), isActive: $showUserView) {
                                 Image(systemName: "person")
                                     .resizable()
                                     .frame(width: 24, height: 24)
@@ -32,7 +34,7 @@ struct ContentView: View {
                             
                             Spacer()
                             
-                            Text("Messages")
+                            Text(networkManager.currentRoomID)
                                 .font(.headline)
                                 .frame(maxWidth: .infinity)
                                 .padding(.bottom, 5)
@@ -62,68 +64,47 @@ struct ContentView: View {
                     ScrollViewReader { proxy in
                         ScrollView(.vertical, showsIndicators: false) {
                             VStack(spacing: 10) {
-                                ForEach(0..<networkManager.messages.count, id: \.self) { index in
-                                    let message = networkManager.messages[index]
-                                    let messageParts = message.components(separatedBy: "||")
-                                    let messageContent = messageParts[0]
-                                    let profilePictureURL = messageParts.count > 1 ? messageParts[1] : ""
-                                    let senderInfo = messageParts.count > 2 ? messageParts[2] : ""
+                                ForEach(networkManager.messages[networkManager.currentRoomID] ?? []) { message in
+                                    let processedMessage = processMessage(message.content)
                                     
-                                    let processedMessage = processMessage(messageContent)
-                                    
-                                    let isCurrentUserMessage = isMessageFromCurrentUser(senderInfo)
-                                    let isFirstInGroup = isFirstInGroup(at: index)
-                                    let isLastInGroup = isLastInGroup(at: index)
-                                    let (senderName, timestamp) = extractSenderInfoAndTimestamp(from: senderInfo)
+                                    let isCurrentUserMessage = message.senderID == user?.uid
                                     
                                     VStack(spacing: 5) {
                                         if !processedMessage.text.isEmpty || processedMessage.mediaURL != nil || processedMessage.youtubeVideoId != nil {
                                             HStack(alignment: .top) {
                                                 if !isCurrentUserMessage {
-                                                    if isFirstInGroup {
-                                                        ProfileImageView(imageURL: profilePictureURL)
-                                                    } else {
-                                                        Spacer().frame(width: 40)
-                                                    }
+                                                    ProfileImageView(imageURL: message.profilePictureURL)
                                                 }
                                                 
                                                 VStack(alignment: isCurrentUserMessage ? .trailing : .leading) {
                                                     MessageContentView(
                                                         processedMessage: processedMessage,
-                                                        senderName: senderName,
-                                                        timestamp: timestamp,
+                                                        senderName: message.senderID,
+                                                        timestamp: formatTimestamp(message.timestamp),
                                                         isCurrentUser: isCurrentUserMessage
                                                     )
                                                     
-                                                    if isLastInGroup {
-                                                        Text("\(senderName) • \(timestamp)")
-                                                            .font(.caption)
-                                                            .foregroundColor(.gray)
-                                                    }
+                                                    Text("\(message.senderID) • \(formatTimestamp(message.timestamp))")
+                                                        .font(.caption)
+                                                        .foregroundColor(.gray)
                                                 }
                                                 
                                                 if isCurrentUserMessage {
-                                                    if isFirstInGroup {
-                                                        ProfileImageView(imageURL: profilePictureURL)
-                                                    } else {
-                                                        Spacer().frame(width: 40)
-                                                    }
+                                                    ProfileImageView(imageURL: message.profilePictureURL)
                                                 }
                                             }
                                             .padding(.horizontal)
                                             .padding(.bottom, 2)
                                         }
                                     }
-                                    .id(message)
+                                    .id(message.id)
                                 }
                             }
-
-                            
                             .padding(.bottom, 10)
-                            .onChange(of: networkManager.messages) { _ in
-                                if let lastMessage = networkManager.messages.last {
+                            .onChange(of: networkManager.messages[networkManager.currentRoomID]) { messages in
+                                if let lastMessage = messages?.last {
                                     withAnimation {
-                                        proxy.scrollTo(lastMessage, anchor: .bottom)
+                                        proxy.scrollTo(lastMessage.id, anchor: .bottom)
                                     }
                                 }
                             }
@@ -153,6 +134,37 @@ struct ContentView: View {
                     .background(Color(UIColor.systemBackground))
                 }
                 .padding(.bottom, 5)
+                
+                HStack {
+                    Menu {
+                        ForEach(networkManager.rooms, id: \.self) { room in
+                            Button(action: {
+                                networkManager.joinRoom(room)
+                            }) {
+                                Text(room)
+                            }
+                        }
+                        
+                        Button(action: {
+                            showRoomCreationView = true
+                        }) {
+                            Text("Create New Room")
+                        }
+                    } label: {
+                        Text("Rooms")
+                        Image(systemName: "chevron.down")
+                    }
+                    .padding()
+                    
+                    Spacer()
+                    
+                    Button(action: {
+                        networkManager.clearMessages(in: networkManager.currentRoomID)
+                    }) {
+                        Text("Clear Messages")
+                    }
+                    .padding()
+                }
             } else {
                 LoginView(signInAction: signInWithGoogle)
             }
@@ -162,10 +174,27 @@ struct ContentView: View {
                 print("Logged in, fetching messages...")
                 self.user = currentUser
                 self.isSignedIn = true
-                networkManager.fetchMessages()
+                networkManager.fetchRooms()
+                networkManager.fetchMessages(for: networkManager.currentRoomID)
                 Timer.scheduledTimer(withTimeInterval: 0.2, repeats: true) { _ in
-                    networkManager.fetchMessages()
+                    networkManager.fetchMessages(for: networkManager.currentRoomID)
                 }
+            }
+        }
+        .sheet(isPresented: $showRoomCreationView) {
+            VStack {
+                TextField("Enter room name", text: $newRoomName)
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                    .padding()
+                
+                Button("Create Room") {
+                    if !newRoomName.isEmpty {
+                        networkManager.createRoom(newRoomName)
+                        newRoomName = ""
+                        showRoomCreationView = false
+                    }
+                }
+                .padding()
             }
         }
     }
@@ -178,11 +207,7 @@ struct ContentView: View {
         let trimmedMessage = newMessage.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedMessage.isEmpty else { return }
         
-        // Get the user's profile picture URL
-        let profilePictureURL = user.photoURL?.absoluteString ?? ""
-        
-        let formattedMessage = "\(trimmedMessage)||\(profilePictureURL)||(Sent by \(user.displayName?.components(separatedBy: " ").first ?? "User") at \(formattedCurrentDateTime()))"
-        networkManager.sendMessage(formattedMessage)
+        networkManager.sendMessage(trimmedMessage, to: networkManager.currentRoomID)
         newMessage = ""
     }
     
@@ -317,7 +342,7 @@ struct ContentView: View {
                 }
                 self.user = authResult?.user
                 self.isSignedIn = true
-                networkManager.fetchMessages()
+                networkManager.fetchMessages(for: networkManager.currentRoomID)
             }
         }
     }
@@ -332,112 +357,16 @@ struct ContentView: View {
         }
     }
     
+    private func formatTimestamp(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "M/d/yy, h:mm a"
+        return formatter.string(from: date)
+    }
+    
     private func formattedCurrentDateTime() -> String {
         let formatter = DateFormatter()
         formatter.dateFormat = "M/d/yy, h:mm a"
         return formatter.string(from: Date())
-    }
-    
-    private func extractLastParenthesesContent(from message: String) -> String? {
-        guard let lastOpenParenIndex = message.lastIndex(of: "("),
-              let lastCloseParenIndex = message.lastIndex(of: ")"),
-              lastOpenParenIndex < lastCloseParenIndex else {
-            return nil
-        }
-        let startIndex = message.index(after: lastOpenParenIndex)
-        let endIndex = lastCloseParenIndex
-        return String(message[startIndex..<endIndex])
-    }
-    
-    private func messageWithoutLastParentheses(_ message: String) -> String {
-        guard let lastOpenParenIndex = message.lastIndex(of: "("),
-              let lastCloseParenIndex = message.lastIndex(of: ")"),
-              lastOpenParenIndex < lastCloseParenIndex else {
-            return message
-        }
-        return String(message[..<lastOpenParenIndex]).trimmingCharacters(in: .whitespacesAndNewlines)
-    }
-    
-    private func shouldShowTimestamp(for index: Int) -> Bool {
-        guard index < networkManager.messages.count else { return false }
-        
-        let message = networkManager.messages[index]
-        let isCurrentUserMessage = isMessageFromCurrentUser(message)
-        
-        if index < networkManager.messages.count - 1 {
-            let nextMessage = networkManager.messages[index + 1]
-            let isNextMessageFromSameUser = isMessageFromCurrentUser(nextMessage) == isCurrentUserMessage
-            return !isNextMessageFromSameUser
-        }
-        
-        return true
-    }
-    
-    private func isMessageFromCurrentUser(_ senderInfo: String) -> Bool {
-        guard let user = user else { return false }
-        let firstName = user.displayName?.components(separatedBy: " ").first ?? ""
-        return senderInfo.contains("Sent by \(firstName) at")
-    }
-
-    private func extractTimestamp(from senderInfo: String) -> String {
-        let components = senderInfo.components(separatedBy: "at ")
-        if components.count > 1 {
-            var timestamp = components[1].trimmingCharacters(in: .whitespaces)
-            // Remove the trailing parenthesis
-            if timestamp.hasSuffix(")") {
-                timestamp = String(timestamp.dropLast())
-            }
-            return timestamp
-        }
-        return ""
-    }
-    
-    private func extractSenderInfoAndTimestamp(from senderInfo: String) -> (String, String) {
-        // Remove leading and trailing parentheses from the entire string
-        let cleanedInfo = senderInfo.trimmingCharacters(in: CharacterSet(charactersIn: "()"))
-        
-        let components = cleanedInfo.components(separatedBy: "at ")
-        if components.count > 1 {
-            let senderName = components[0].replacingOccurrences(of: "Sent by ", with: "").trimmingCharacters(in: .whitespaces)
-            let timestamp = components[1].trimmingCharacters(in: .whitespaces)
-            return (senderName, timestamp)
-        }
-        return ("", "")
-    }
-
-    private func isFirstInGroup(at index: Int) -> Bool {
-        if index == 0 { return true }
-        let previousMessage = networkManager.messages[index - 1].components(separatedBy: "||")
-        let currentMessage = networkManager.messages[index].components(separatedBy: "||")
-        let previousSenderInfo = previousMessage.count > 2 ? previousMessage[2] : ""
-        let currentSenderInfo = currentMessage.count > 2 ? currentMessage[2] : ""
-        return extractSenderName(from: previousSenderInfo) != extractSenderName(from: currentSenderInfo)
-    }
-
-    private func extractSenderName(from senderInfo: String) -> String {
-        let components = senderInfo.components(separatedBy: "Sent by ")
-        if components.count > 1 {
-            let nameAndTimestamp = components[1].components(separatedBy: " at ")
-            return nameAndTimestamp[0]
-        }
-        return ""
-    }
-    
-    private func extractProfilePictureURL(_ message: String) -> String {
-        let components = message.components(separatedBy: " (Sent by ")
-        guard components.count > 1 else { return "" }
-        let urlAndTimestamp = components[0].components(separatedBy: " ")
-        guard urlAndTimestamp.count > 1 else { return "" }
-        return urlAndTimestamp.last ?? ""
-    }
-    
-    private func isLastInGroup(at index: Int) -> Bool {
-        if index == networkManager.messages.count - 1 { return true }
-        let currentMessage = networkManager.messages[index].components(separatedBy: "||")
-        let nextMessage = networkManager.messages[index + 1].components(separatedBy: "||")
-        let currentSenderInfo = currentMessage.count > 2 ? currentMessage[2] : ""
-        let nextSenderInfo = nextMessage.count > 2 ? nextMessage[2] : ""
-        return extractSenderName(from: currentSenderInfo) != extractSenderName(from: nextSenderInfo)
     }
 }
 
@@ -675,14 +604,13 @@ struct MessageContentView: View {
     let isCurrentUser: Bool
     
     var body: some View {
-        VStack(alignment: isCurrentUser ? .trailing : .leading, spacing: 5) {
+        VStack(alignment: isCurrentUser ? .trailing : .leading) {
             if !processedMessage.text.isEmpty {
                 Text(processedMessage.text)
                     .padding(10)
-                    .background(isCurrentUser ? Color("Accent") : Color.gray.opacity(0.2))
-                    .foregroundColor(isCurrentUser ? .white : .primary)
-                    .cornerRadius(20)
-                    .frame(maxWidth: 300, alignment: isCurrentUser ? .trailing : .leading)
+                    .background(isCurrentUser ? Color.blue : Color.gray)
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
             }
             
             if let mediaURL = processedMessage.mediaURL {
@@ -691,7 +619,6 @@ struct MessageContentView: View {
             
             if let youtubeVideoId = processedMessage.youtubeVideoId {
                 YouTubePreviewView(videoId: youtubeVideoId)
-                    .frame(maxWidth: 300)
             }
         }
     }

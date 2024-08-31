@@ -10,20 +10,65 @@ struct UserData: Identifiable, Codable {
     let profileImageURL: String
 }
 
-class NetworkManager: ObservableObject {
-    @Published var messages: [String] = []
+public struct Message: Identifiable, Codable, Equatable {
+    public let id: String
+    public let content: String
+    public let senderID: String
+    public let roomID: String
+    public let timestamp: Date
+    public let profilePictureURL: String?
+    
+    enum CodingKeys: String, CodingKey {
+        case id, content, senderID, roomID, timestamp, profilePictureURL
+    }
+    
+    public init(id: String, content: String, senderID: String, roomID: String, timestamp: Date, profilePictureURL: String?) {
+        self.id = id
+        self.content = content
+        self.senderID = senderID
+        self.roomID = roomID
+        self.timestamp = timestamp
+        self.profilePictureURL = profilePictureURL
+    }
+    
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(String.self, forKey: .id)
+        content = try container.decode(String.self, forKey: .content)
+        senderID = try container.decode(String.self, forKey: .senderID)
+        roomID = try container.decode(String.self, forKey: .roomID)
+        timestamp = try container.decode(Date.self, forKey: .timestamp)
+        profilePictureURL = try container.decodeIfPresent(String.self, forKey: .profilePictureURL)
+    }
+    
+    public static func == (lhs: Message, rhs: Message) -> Bool {
+        return lhs.id == rhs.id &&
+               lhs.content == rhs.content &&
+               lhs.senderID == rhs.senderID &&
+               lhs.roomID == rhs.roomID &&
+               lhs.timestamp == rhs.timestamp &&
+               lhs.profilePictureURL == rhs.profilePictureURL
+    }
+}
+
+public class NetworkManager: ObservableObject {
+    @Published var messages: [String: [Message]] = [:]
     @Published var users: [UserData] = []
+    @Published var rooms: [String] = ["general"]
+    @Published var currentRoomID: String = "general"
     private let baseURL = "https://waffle.ayaangrover.hackclub.app/"
-    private let adminBaseURL = "https://waffle-admin.ayaangrover.hackclub.app/"
 
+    init() {
+        fetchRooms()
+    }
 
-    func fetchMessages() {
-        guard let url = URL(string: baseURL) else {
+    func fetchMessages(for roomID: String) {
+        guard let url = URL(string: "\(baseURL)messages?room=\(roomID)") else {
             print("Invalid URL")
             return
         }
         
-        let task = URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
+        URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
             guard let self = self else { return }
             
             if let error = error {
@@ -37,143 +82,180 @@ class NetworkManager: ObservableObject {
             }
             
             do {
-                let fetchedMessages = try JSONDecoder().decode([String].self, from: data)
-                let processedMessages = fetchedMessages.compactMap { message -> String? in
-                    print("Processing message: \(message)")
-                    let cleanedMessage = message.replacingOccurrences(of: " ", with: "")
-                    if EncryptionManager.isEncrypted(cleanedMessage) {
-                        if let decryptedMessage = EncryptionManager.decrypt(cleanedMessage) {
-                            print("Successfully decrypted: \(decryptedMessage)")
-                            return decryptedMessage
+                let fetchedMessages = try JSONDecoder().decode([Message].self, from: data)
+                let processedMessages = fetchedMessages.map { message -> Message in
+                    let cleanedContent = message.content.replacingOccurrences(of: " ", with: "")
+                    if EncryptionManager.isEncrypted(cleanedContent) {
+                        if let decryptedContent = EncryptionManager.decrypt(cleanedContent) {
+                            return Message(id: message.id, content: decryptedContent, senderID: message.senderID, roomID: message.roomID, timestamp: message.timestamp, profilePictureURL: message.profilePictureURL)
                         } else {
-                            print("Failed to decrypt message: \(cleanedMessage)")
-                            return "This message uses a different message encryption. Tell this user to update their app!"
+                            return Message(id: message.id, content: "This message uses a different encryption. Tell this user to update their app!", senderID: message.senderID, roomID: message.roomID, timestamp: message.timestamp, profilePictureURL: message.profilePictureURL)
                         }
                     } else {
                         return message
                     }
                 }
                 DispatchQueue.main.async {
-                    self.messages = processedMessages
-                    print("Updated messages: \(self.messages)")
+                    self.messages[roomID] = processedMessages
                 }
             } catch {
                 print("Error decoding messages: \(error)")
             }
-        }
-        task.resume()
+        }.resume()
     }
     
-    func sendMessage(_ message: String) {
-        guard let url = URL(string: baseURL + "send") else {
+    func sendMessage(_ content: String, to roomID: String) {
+        guard let url = URL(string: "\(baseURL)send") else {
             print("Invalid URL for sending message")
             return
         }
         
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
-        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         
-        // Encryption
-        let encryptedMessage = EncryptionManager.encrypt(message) ?? message
-        print("Original message: \(message)")
-        print("Encrypted message: \(encryptedMessage)")
-
-        // This makes sure the message is ready for encryption.
-        // It also ensures there are no discrepancies between what is sent and what is recieved.
-        let formattedMessage = encryptedMessage
-            .replacingOccurrences(of: "+", with: "-")
-            .replacingOccurrences(of: "/", with: "_")
-            .replacingOccurrences(of: "=", with: "")
-            .addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-        let body = "message=\(formattedMessage)"
-        request.httpBody = body.data(using: .utf8)
+        let encryptedContent = EncryptionManager.encrypt(content) ?? content
         
-        let task = URLSession.shared.dataTask(with: request) { data, response, error in
+        guard let currentUser = Auth.auth().currentUser else {
+            print("No user logged in")
+            return
+        }
+        
+        let message = Message(id: UUID().uuidString,
+                              content: encryptedContent,
+                              senderID: currentUser.uid,
+                              roomID: roomID,
+                              timestamp: Date(),
+                              profilePictureURL: currentUser.photoURL?.absoluteString ?? "")
+        
+        do {
+            let jsonData = try JSONEncoder().encode(message)
+            request.httpBody = jsonData
+        } catch {
+            print("Error encoding message: \(error)")
+            return
+        }
+        
+        URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
             if let error = error {
                 print("Error sending message: \(error)")
                 return
             }
             
-            // Debugging
-            guard let data = data, let responseString = String(data: data, encoding: .utf8) else {
-                print("No data received from send request")
-                return
-            }
-            
-            print("Response from server: \(responseString)")
-            
             DispatchQueue.main.async {
-                self.fetchMessages()
+                self?.fetchMessages(for: roomID)
             }
-        }
-        task.resume()
+        }.resume()
     }
     
-    func fetchUsers() {
-        guard let url = URL(string: adminBaseURL + "users") else {
-            print("Invalid URL for fetching users")
+    func createRoom(_ name: String) {
+        guard let url = URL(string: "\(baseURL)create-room") else {
+            print("Invalid URL for creating room")
             return
         }
         
-        getFirebaseIdToken { [weak self] (idToken, error) in
-            guard let self = self else { return }
-            
-            if let error = error {
-                print("Error getting Firebase ID token: \(error)")
-                return
-            }
-            
-            guard let idToken = idToken else {
-                print("No ID token received")
-                return
-            }
-            
-            var request = URLRequest(url: url)
-            request.setValue("Bearer \(idToken)", forHTTPHeaderField: "Authorization")
-            
-            let task = URLSession.shared.dataTask(with: request) { data, response, error in
-                if let error = error {
-                    print("Error fetching users: \(error)")
-                    return
-                }
-                
-                guard let data = data else {
-                    print("No data received when fetching users")
-                    return
-                }
-                
-                do {
-                    let fetchedUsers = try JSONDecoder().decode([UserData].self, from: data)
-                    DispatchQueue.main.async {
-                        self.users = fetchedUsers
-                    }
-                } catch {
-                    print("Error decoding users: \(error)")
-                }
-            }
-            task.resume()
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        let body = ["roomName": name]
+        
+        do {
+            let jsonData = try JSONEncoder().encode(body)
+            request.httpBody = jsonData
+        } catch {
+            print("Error encoding room name: \(error)")
+            return
         }
+        
+        URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
+            if let error = error {
+                print("Error creating room: \(error)")
+                return
+            }
+            
+            DispatchQueue.main.async {
+                self?.rooms.append(name)
+                self?.currentRoomID = name
+                self?.fetchMessages(for: name)
+            }
+        }.resume()
+    }
+    
+    func fetchRooms() {
+        guard let url = URL(string: "\(baseURL)rooms") else {
+            print("Invalid URL for fetching rooms")
+            return
+        }
+        
+        URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
+            if let error = error {
+                print("Error fetching rooms: \(error)")
+                return
+            }
+            
+            guard let data = data else {
+                print("No data received when fetching rooms")
+                return
+            }
+            
+            do {
+                let fetchedRooms = try JSONDecoder().decode([String].self, from: data)
+                DispatchQueue.main.async {
+                    self?.rooms = fetchedRooms
+                }
+            } catch {
+                print("Error decoding rooms: \(error)")
+            }
+        }.resume()
+    }
+    
+    func joinRoom(_ roomID: String) {
+        currentRoomID = roomID
+        fetchMessages(for: roomID)
+    }
+    
+    func clearMessages(in roomID: String? = nil) {
+        let urlString = roomID != nil ? "\(baseURL)clear?room=\(roomID!)" : "\(baseURL)clear"
+        guard let url = URL(string: urlString) else {
+            print("Invalid URL for clearing messages")
+            return
+        }
+        
+        URLSession.shared.dataTask(with: url) { [weak self] _, _, error in
+            if let error = error {
+                print("Error clearing messages: \(error)")
+                return
+            }
+            
+            DispatchQueue.main.async {
+                if let roomID = roomID {
+                    self?.messages[roomID] = []
+                } else {
+                    self?.messages = [:]
+                }
+            }
+        }.resume()
     }
     
     func getFirebaseIdToken(completion: @escaping (String?, Error?) -> Void) {
-            guard let currentUser = Auth.auth().currentUser else {
-                completion(nil, NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "No user logged in"]))
+        guard let currentUser = Auth.auth().currentUser else {
+            completion(nil, NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "No user logged in"]))
+            return
+        }
+        
+        currentUser.getIDTokenForcingRefresh(true) { idToken, error in
+            if let error = error {
+                completion(nil, error)
                 return
             }
             
-            currentUser.getIDTokenForcingRefresh(true) { idToken, error in
-                if let error = error {
-                    completion(nil, error)
-                    return
-                }
-                
-                guard let token = idToken else {
-                    completion(nil, NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to get ID token"]))
-                    return
-                }
-                
-                completion(token, nil)
+            guard let token = idToken else {
+                completion(nil, NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to get ID token"]))
+                return
             }
+            
+            completion(token, nil)
         }
+    }
 }
