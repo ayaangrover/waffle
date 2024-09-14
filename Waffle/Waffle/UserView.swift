@@ -1,43 +1,67 @@
 import SwiftUI
-
+import FirebaseAuth
 
 struct UserView: View {
+    @EnvironmentObject private var networkManager: NetworkManager
+    @State private var roomMembers: [String] = []
+    @State private var isLoading = true
+    @State private var errorMessage: String?
+    
     var body: some View {
-        Text("Hello SwiftUI!")
+        NavigationView {
+            Group {
+                if isLoading {
+                    ProgressView()
+                } else if let error = errorMessage {
+                    Text(error)
+                        .foregroundColor(.red)
+                } else {
+                    List(roomMembers, id: \.self) { email in
+                        Text(email)
+                    }
+                }
+            }
+            .navigationTitle("Room Members")
+        }
+        .onAppear(perform: fetchRoomMembers)
+    }
+    
+    private func fetchRoomMembers() {
+        guard let currentUser = Auth.auth().currentUser else {
+            errorMessage = "No user logged in"
+            isLoading = false
+            return
+        }
+        
+        let roomID = networkManager.currentRoomID
+        
+        guard let url = URL(string: "\(networkManager.baseURL)room-members?roomId=\(roomID)&userId=\(currentUser.uid)") else {
+            errorMessage = "Invalid URL"
+            isLoading = false
+            return
+        }
+        
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            DispatchQueue.main.async {
+                isLoading = false
+                
+                if let error = error {
+                    errorMessage = "Error: \(error.localizedDescription)"
+                    return
+                }
+                
+                guard let data = data else {
+                    errorMessage = "No data received"
+                    return
+                }
+                
+                do {
+                    let members = try JSONDecoder().decode([String].self, from: data)
+                    roomMembers = members
+                } catch {
+                    errorMessage = "Error decoding data: \(error.localizedDescription)"
+                }
+            }
+        }.resume()
     }
 }
-
-
-
-
-//import SwiftUI
-//
-//public struct UserView: View {
-//    @StateObject private var networkManager = NetworkManager()
-//    
-//    public var body: some View {
-//        NavigationView {
-//            List(networkManager.users) { user in
-//                HStack(spacing: 15) {
-//                    ProfileImageView(imageURL: user.profileImageURL)
-//                    
-//                    VStack(alignment: .leading, spacing: 5) {
-//                        Text(user.name)
-//                            .font(.headline)
-//                            .foregroundColor(Color("Accent"))
-//                        
-//                        Text(user.email)
-//                            .font(.subheadline)
-//                            .foregroundColor(.gray)
-//                    }
-//                }
-//                .padding(.vertical, 8)
-//            }
-//            .navigationTitle("Users")
-//            .onAppear {
-//                networkManager.fetchUsers()
-//            }
-//        }
-//        .background(Color("Background"))
-//    }
-//}

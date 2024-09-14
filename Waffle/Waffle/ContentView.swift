@@ -11,9 +11,15 @@ struct ContentView: View {
     @State private var isSignedIn = false
     @StateObject private var networkManager = NetworkManager()
     @State private var newMessage = ""
-    @State private var showUserView = false
     @State private var showRoomCreationView = false
+    @State private var showRoomMemberEditView = false
+    @State private var showUserView = false
     @State private var newRoomName = ""
+    @State private var newRoomMembers = ""
+    @State private var editingRoomID = ""
+    @State private var navigationPath = NavigationPath()
+    @State private var showAuthorizationError = false
+    
 
     var body: some View {
         VStack(spacing: 0) {
@@ -23,7 +29,9 @@ struct ContentView: View {
                         Spacer().frame(height: 90)
                         
                         HStack {
-                            NavigationLink(destination: UserView(), isActive: $showUserView) {
+                            Button(action: {
+                                showUserView = true
+                            }) {
                                 Image(systemName: "person")
                                     .resizable()
                                     .frame(width: 24, height: 24)
@@ -163,9 +171,10 @@ struct ContentView: View {
                     Spacer()
                     
                     Button(action: {
-                        networkManager.clearMessages(in: networkManager.currentRoomID)
+                        showRoomMemberEditView = true
+                        editingRoomID = networkManager.currentRoomID
                     }) {
-                        Text("Clear Messages")
+                        Text("Edit Members")
                     }
                     .padding()
                 }
@@ -184,23 +193,57 @@ struct ContentView: View {
                     networkManager.fetchMessages(for: networkManager.currentRoomID)
                 }
             }
+            NotificationCenter.default.addObserver(forName: .authorizationErrorNotification, object: nil, queue: .main) { _ in
+                    self.showAuthorizationError = true
+                }
+        }
+        .alert(isPresented: $showAuthorizationError) {
+            Alert(
+                title: Text("Authorization Error"),
+                message: Text("You are not authorized to access this room. Please check your room membership."),
+                dismissButton: .default(Text("OK"))
+            )
+        }
+        .sheet(isPresented: $showUserView) {
+            UserView().environmentObject(networkManager)
         }
         .sheet(isPresented: $showRoomCreationView) {
-            VStack {
-                TextField("Enter room name", text: $newRoomName)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                    .padding()
-                
-                Button("Create Room") {
-                    if !newRoomName.isEmpty {
-                        networkManager.createRoom(newRoomName)
-                        newRoomName = ""
-                        showRoomCreationView = false
+                    VStack {
+                        TextField("Enter room name", text: $newRoomName)
+                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                            .padding()
+                        
+                        TextField("Enter member emails (comma-separated)", text: $newRoomMembers)
+                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                            .padding()
+                        
+                        Button("Create Room") {
+                            if !newRoomName.isEmpty {
+                                let memberList = newRoomMembers.split(separator: ",").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                                networkManager.createRoom(newRoomName, members: memberList)
+                                newRoomName = ""
+                                newRoomMembers = ""
+                                showRoomCreationView = false
+                            }
+                        }
+                        .padding()
                     }
                 }
-                .padding()
-            }
-        }
+            .sheet(isPresented: $showRoomMemberEditView) {
+                    VStack {
+                        TextField("Enter new member emails (comma-separated)", text: $newRoomMembers)
+                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                            .padding()
+                        
+                        Button("Update Members") {
+                            let memberList = newRoomMembers.split(separator: ",").map { String($0.trimmingCharacters(in: .whitespacesAndNewlines)) }
+                            networkManager.editRoomMembers(roomID: editingRoomID, newMembers: memberList)
+                            newRoomMembers = ""
+                            showRoomMemberEditView = false
+                        }
+                        .padding()
+                    }
+                }
     }
     
     private func sendMessage() {
@@ -211,7 +254,7 @@ struct ContentView: View {
         let trimmedMessage = newMessage.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedMessage.isEmpty else { return }
         
-        networkManager.sendMessage(trimmedMessage, to: networkManager.currentRoomID)
+        networkManager.sendMessage(newMessage, to: networkManager.currentRoomID)
         newMessage = ""
     }
     
