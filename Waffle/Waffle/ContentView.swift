@@ -187,6 +187,7 @@ struct ContentView: View {
                 print("Logged in, fetching messages...")
                 self.user = currentUser
                 self.isSignedIn = true
+                networkManager.registerUser()
                 networkManager.fetchRooms()
                 networkManager.fetchMessages(for: networkManager.currentRoomID)
                 Timer.scheduledTimer(withTimeInterval: 0.2, repeats: true) { _ in

@@ -349,36 +349,36 @@ public class NetworkManager: ObservableObject {
     }
     
     func registerUser() {
-        guard let currentUser = Auth.auth().currentUser,
-              let url = URL(string: "\(baseURL)register-user") else {
-            print("Invalid URL for registering user or no user logged in")
-            return
-        }
-        
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        
-        let body = ["userId": currentUser.uid, "email": currentUser.email ?? ""]
-        
-        do {
-            let jsonData = try JSONEncoder().encode(body)
-            request.httpBody = jsonData
-        } catch {
-            print("Error encoding user data: \(error)")
-            return
-        }
-        
-        URLSession.shared.dataTask(with: request) { _, response, error in
-            if let error = error {
-                print("Error registering user: \(error)")
+            guard let currentUser = Auth.auth().currentUser,
+                  let url = URL(string: "\(baseURL)register-user") else {
+                print("Invalid URL for registering user or no user logged in")
+                return
             }
-            
-            if let httpResponse = response as? HTTPURLResponse {
-                print("Register user status code: \(httpResponse.statusCode)")
+
+            var request = URLRequest(url: url)
+            request.httpMethod = "POST"
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+            let body = ["userId": currentUser.uid, "email": currentUser.email ?? ""]
+
+            do {
+                let jsonData = try JSONEncoder().encode(body)
+                request.httpBody = jsonData
+            } catch {
+                print("Error encoding user data: \(error)")
+                return
             }
-        }.resume()
-    }
+
+            URLSession.shared.dataTask(with: request) { _, response, error in
+                if let error = error {
+                    print("Error registering user: \(error)")
+                }
+
+                if let httpResponse = response as? HTTPURLResponse {
+                    print("Register user status code: \(httpResponse.statusCode)")
+                }
+            }.resume()
+        }
     
     func fetchRooms() {
         guard let currentUser = Auth.auth().currentUser,
