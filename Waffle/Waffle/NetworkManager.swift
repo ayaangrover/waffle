@@ -52,6 +52,7 @@ public class NetworkManager: ObservableObject {
 
     init() {
         fetchRooms()
+        startRoomRefreshTimer()
     }
     
     func fetchUsers() {
@@ -171,6 +172,9 @@ public class NetworkManager: ObservableObject {
                 print("Fetch messages status code: \(httpResponse.statusCode)")
                 if httpResponse.statusCode == 403 {
                     print("Authorization error: User not authorized to access this room")
+                    if let responseString = String(data: data, encoding: .utf8) {
+                        print("Server response: \(responseString)")
+                    }
                     DispatchQueue.main.async {
                         self.messages[roomID] = []
                         NotificationCenter.default.post(name: .authorizationErrorNotification, object: nil)
@@ -239,8 +243,22 @@ public class NetworkManager: ObservableObject {
     }
     
     func sendMessage(_ content: String, to roomID: String) {
-        guard let url = URL(string: "\(baseURL)send") else {
+        guard var urlComponents = URLComponents(string: "\(baseURL)send") else {
             print("Invalid URL for sending message")
+            return
+        }
+        
+        guard let currentUser = Auth.auth().currentUser,
+              let userEmail = currentUser.email else {
+            print("No user logged in or email not available")
+            return
+        }
+        
+        // Add user email to the URL as a query parameter
+        urlComponents.queryItems = [URLQueryItem(name: "userEmail", value: userEmail)]
+        
+        guard let url = urlComponents.url else {
+            print("Failed to create URL with query parameters")
             return
         }
         
@@ -249,11 +267,6 @@ public class NetworkManager: ObservableObject {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         
         let encryptedContent = EncryptionManager.encrypt(content) ?? content
-        
-        guard let currentUser = Auth.auth().currentUser else {
-            print("No user logged in")
-            return
-        }
         
         let message = Message(id: UUID().uuidString,
                               content: encryptedContent,
@@ -269,6 +282,7 @@ public class NetworkManager: ObservableObject {
             print("Sending message to room: \(roomID)")
             print("Message content: \(content)")
             print("Encrypted content: \(encryptedContent)")
+            print("User email: \(userEmail)")
         } catch {
             print("Error encoding message: \(error)")
             return
@@ -341,9 +355,7 @@ public class NetworkManager: ObservableObject {
             }
             
             DispatchQueue.main.async {
-                self?.rooms.append(name)
-                self?.currentRoomID = name
-                self?.fetchMessages(for: name)
+                self?.fetchRooms()
             }
         }.resume()
     }
@@ -382,11 +394,14 @@ public class NetworkManager: ObservableObject {
     
     func fetchRooms() {
         guard let currentUser = Auth.auth().currentUser,
-              let url = URL(string: "\(baseURL)rooms?userEmail=\(currentUser.email ?? "")") else {
+              let userEmail = currentUser.email,
+              let encodedEmail = userEmail.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+              let url = URL(string: "\(baseURL)rooms?userEmail=\(encodedEmail)") else {
             print("Invalid URL for fetching rooms or no user logged in")
             return
         }
         
+        print("Fetching rooms for user: \(userEmail)")
         URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
             if let error = error {
                 print("Error fetching rooms: \(error)")
@@ -404,8 +419,17 @@ public class NetworkManager: ObservableObject {
             
             do {
                 let fetchedRooms = try JSONDecoder().decode([String].self, from: data)
+                print("Fetched rooms: \(fetchedRooms)")
+                
                 DispatchQueue.main.async {
                     self?.rooms = fetchedRooms
+                    
+                    // If the current room is not in the fetched rooms, switch to "General"
+                    if let currentRoom = self?.currentRoomID, !fetchedRooms.contains(currentRoom) {
+                        print("Current room \(currentRoom) not in fetched rooms, switching to General")
+                        self?.currentRoomID = "General"
+                        self?.fetchMessages(for: "General")
+                    }
                 }
             } catch {
                 print("Error decoding rooms: \(error)")
@@ -413,9 +437,70 @@ public class NetworkManager: ObservableObject {
         }.resume()
     }
     
+    func startRoomRefreshTimer() {
+        Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak self] _ in
+            self?.fetchRooms()
+        }
+    }
+    
     func joinRoom(_ roomID: String) {
-        currentRoomID = roomID
-        fetchMessages(for: roomID)
+        guard let currentUser = Auth.auth().currentUser, let userEmail = currentUser.email else {
+            print("No user logged in or email not available")
+            return
+        }
+        print("Attempting to join room: \(roomID) with user email: \(userEmail) and user ID: \(currentUser.uid)")
+        checkRoomMembership(roomID: roomID, userEmail: userEmail) { [weak self] isMember in
+            guard let self = self else { return }
+            if isMember {
+                print("User is a member of room: \(roomID)")
+                DispatchQueue.main.async {
+                    self.currentRoomID = roomID
+                    self.fetchMessages(for: roomID)
+                }
+            } else {
+                print("User is not a member of room: \(roomID)")
+                DispatchQueue.main.async {
+                    self.currentRoomID = "General"
+                    self.fetchMessages(for: "General")
+                }
+            }
+        }
+    }
+
+    func checkRoomMembership(roomID: String, userEmail: String, completion: @escaping (Bool) -> Void) {
+        guard let encodedEmail = userEmail.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+              let url = URL(string: "\(baseURL)room-members?roomId=\(roomID)&userEmail=\(encodedEmail)") else {
+            print("Invalid URL for checking room membership")
+            completion(false)
+            return
+        }
+        
+        print("Checking room membership for room: \(roomID), user: \(userEmail)")
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            if let error = error {
+                print("Error checking room membership: \(error)")
+                completion(false)
+                return
+            }
+            
+            if let httpResponse = response as? HTTPURLResponse {
+                print("Check room membership status code: \(httpResponse.statusCode)")
+                if httpResponse.statusCode == 200 {
+                    if let data = data, let responseString = String(data: data, encoding: .utf8) {
+                        print("Room membership response: \(responseString)")
+                    }
+                    completion(true)
+                } else {
+                    if let data = data, let responseString = String(data: data, encoding: .utf8) {
+                        print("Room membership error response: \(responseString)")
+                    }
+                    completion(false)
+                }
+            } else {
+                print("No HTTP response received")
+                completion(false)
+            }
+        }.resume()
     }
     
     func clearMessages(in roomID: String? = nil) {
@@ -446,34 +531,6 @@ public class NetworkManager: ObservableObject {
                 } else {
                     self?.messages = [:]
                 }
-            }
-        }.resume()
-    }
-    
-    func checkRoomMembership(roomID: String, completion: @escaping (Bool) -> Void) {
-        guard let currentUser = Auth.auth().currentUser,
-              let url = URL(string: "\(baseURL)room-members?roomId=\(roomID)&userEmail=\(currentUser.email ?? "")") else {
-            print("Invalid URL for checking room membership")
-            completion(false)
-            return
-        }
-        
-        URLSession.shared.dataTask(with: url) { data, response, error in
-            if let error = error {
-                print("Error checking room membership: \(error)")
-                completion(false)
-                return
-            }
-            
-            if let httpResponse = response as? HTTPURLResponse {
-                print("Check room membership status code: \(httpResponse.statusCode)")
-                if httpResponse.statusCode == 200 {
-                    completion(true)
-                } else {
-                    completion(false)
-                }
-            } else {
-                completion(false)
             }
         }.resume()
     }

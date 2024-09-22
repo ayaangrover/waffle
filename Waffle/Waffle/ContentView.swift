@@ -163,7 +163,7 @@ struct ContentView: View {
                             Text("Create New Room")
                         }
                     } label: {
-                        Text("Rooms")
+                        Text(networkManager.currentRoomID)
                         Image(systemName: "chevron.down")
                     }
                     .padding()
@@ -177,6 +177,7 @@ struct ContentView: View {
                         Text("Edit Members")
                     }
                     .padding()
+                    .disabled(networkManager.currentRoomID == "General")
                 }
             } else {
                 LoginView(signInAction: signInWithGoogle)
