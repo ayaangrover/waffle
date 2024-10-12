@@ -208,10 +208,11 @@
         document.getElementById('newsletter-form').addEventListener('submit', function(e) {
             e.preventDefault();
             const email = this.email.value;
-            fetch('https://waffle-newsletter.ayaangrover.hackclub.app/subscribe', {
+            fetch('http://localhost:3000/subscribe', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'x-api-key': 'wafflechat' // Added API key header
                 },
                 body: JSON.stringify({ email: email }),
             })

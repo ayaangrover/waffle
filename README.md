@@ -2,4 +2,4 @@ Waffle is a group chat app. It is end-to-end encrypted, uses firebase's secure p
 
 ![https://github.com/user-attachments/assets/1045b77c-1ed2-4135-a40f-cc9ee49ede92](https://mintlify.s3-us-west-1.amazonaws.com/akg/logo/main.svg)
 
-<a href="https://www.freepik.com/free-video/happy-friends-telling-stories-backyard_3255285#fromView=search&page=1&position=12&uuid=051dab81-cc7a-432a-ad73-55cd07179609">Video by freepik</a>
+The website includes a video by freepik.
