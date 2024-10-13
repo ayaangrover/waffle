@@ -1,3 +1,4 @@
 CertificateSigningRequest.certSigningRequest
 ios_distribution.cer
 Waffle.mobileprovision
+server/node_modules/debug/.coveralls.yml
