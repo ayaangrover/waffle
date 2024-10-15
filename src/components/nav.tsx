@@ -9,7 +9,7 @@ export function Nav() {
         <div className="flex items-center justify-between py-4">
           <Link href="/" className="flex items-center">
           <Image
-              src="/logo.png"
+              src="./logo.png"
               alt="Waffle App Screenshot"
               width={120}
               height={120}

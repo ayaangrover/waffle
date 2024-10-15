@@ -48,7 +48,7 @@ export default function Home() {
           </div>
           <div className="relative h-[600px] rounded-lg overflow-hidden shadow-2xl animate-fade-left">
             <img
-              src="/cover.png"
+              src="./cover.png"
               alt="Waffle App Screenshot"
               className="object-cover w-full h-full"
             />
