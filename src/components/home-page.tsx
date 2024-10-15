@@ -1,7 +1,7 @@
 "use client"
 
-import React, { useState, useEffect } from 'react'
-import { usePathname, useRouter } from 'next/navigation'
+import React, { useEffect } from 'react'
+import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 
 const pageVariants = {
@@ -34,7 +34,7 @@ const TabContent: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
 const HomePage: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const pathname = usePathname()
-  const router = useRouter()
+  // const router = useRouter()
   // const [activeTab, setActiveTab] = useState(pathname)
 
   useEffect(() => {
