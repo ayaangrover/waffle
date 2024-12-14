@@ -3,3 +3,5 @@ Waffle is a group chat app. It is end-to-end encrypted, uses firebase's secure p
 ![https://github.com/user-attachments/assets/1045b77c-1ed2-4135-a40f-cc9ee49ede92](https://mintlify.s3-us-west-1.amazonaws.com/akg/logo/main.svg)
 
 The website includes a video by freepik.
+
+[![Better Stack Badge](https://uptime.betterstack.com/status-badges/v3/monitor/1pbi9.svg)](https://uptime.betterstack.com/?utm_source=status_badge)
